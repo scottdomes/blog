@@ -3,12 +3,12 @@
 # ----------------------- #
 
 url: http://scottdomes.com
-title: Scott Domes
-subtitle: My Personal Blog.
+title: Scott Domes | Web Developer
+subtitle: Tutorials to make you a better dev
 author: Scott Domes
 author_bio: "Mobile/Front-End Developer @ MuseFind. I write web development tutorials to help you be a better dev. Curator of the Progressive Web App Newsletter."
 simple_search: https://www.google.com/search
-description:
+description: Tutorials to make you a better dev 
 
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in

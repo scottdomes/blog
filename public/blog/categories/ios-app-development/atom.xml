@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Ios App Development | Scott Domes]]></title>
+  <title><![CDATA[Category: Ios App Development | Scott Domes | Web Developer]]></title>
   <link href="http://scottdomes.com/blog/categories/ios-app-development/atom.xml" rel="self"/>
   <link href="http://scottdomes.com/"/>
-  <updated>2017-08-11T16:08:19-07:00</updated>
+  <updated>2017-08-11T16:15:25-07:00</updated>
   <id>http://scottdomes.com/</id>
   <author>
     <name><![CDATA[Scott Domes]]></name>
@@ -27,6 +27,9 @@ delivering high quality apps quickly and efficiently.</p>
 login app, with cookie management, in under 20 minutes.</p>
 
 <p><img src="https://cdn-images-1.medium.com/max/1600/1*5l_gnYCJYe1qAHuba5Aoew.jpeg" alt="" /></p>
+
+<!--more-->
+
 
 <h3>Our App</h3>
 
