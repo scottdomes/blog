@@ -6,6 +6,7 @@ url: http://scottdomes.com
 title: Scott Domes
 subtitle: My Personal Blog.
 author: Scott Domes
+author_bio: "Mobile/Front-End Developer @ MuseFind. I write web development tutorials to help you be a better dev. Curator of the Progressive Web App Newsletter."
 simple_search: https://www.google.com/search
 description:
 
@@ -27,7 +28,7 @@ email:
 
 # If publishing to a subdirectory as in http://site.com/project set 'root: /project'
 root: /
-permalink: /blog/:year/:month/:day/:title/
+permalink: /blog/:title/
 source: source
 destination: public
 plugins: plugins
@@ -64,13 +65,13 @@ default_asides: [asides/recent_posts.html, asides/github.html, asides/delicious.
 # ----------------------- #
 
 # Github repositories
-github_user:
+github_user: scottdomes
 github_repo_count: 0
 github_show_profile_link: true
 github_skip_forks: true
 
 # Twitter
-twitter_user:
+twitter_user: scottdomes
 twitter_tweet_button: true
 
 # Google +1
