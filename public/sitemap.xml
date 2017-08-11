@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://scottdomes.com/blog/getting-started-with-react-native-in-20-minutes/</loc>
+<lastmod>2017-08-11T15:58:54-07:00</lastmod>
+</url>
+<url>
 <loc>http://scottdomes.com/archives/</loc>
 </url>
 <url>
@@ -14,5 +18,20 @@
 </url>
 <url>
 <loc>http://scottdomes.com/posts/</loc>
+</url>
+<url>
+<loc>http://scottdomes.com/blog/categories/react-native/</loc>
+</url>
+<url>
+<loc>http://scottdomes.com/blog/categories/javascript/</loc>
+</url>
+<url>
+<loc>http://scottdomes.com/blog/categories/mobile-app-development/</loc>
+</url>
+<url>
+<loc>http://scottdomes.com/blog/categories/ios-app-development/</loc>
+</url>
+<url>
+<loc>http://scottdomes.com/blog/categories/react/</loc>
 </url>
 </urlset>
