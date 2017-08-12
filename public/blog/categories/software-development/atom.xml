@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Software Development | Scott Domes | Web Developer]]></title>
+  <link href="http://scottdomes.com/blog/categories/software-development/atom.xml" rel="self"/>
+  <link href="http://scottdomes.com/"/>
+  <updated>2017-08-11T17:34:29-07:00</updated>
+  <id>http://scottdomes.com/</id>
+  <author>
+    <name><![CDATA[Scott Domes]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Create a Django API in Under 20 Minutes]]></title>
+    <link href="http://scottdomes.com/blog/create-a-django-api-in-under-20-minutes/"/>
+    <updated>2017-08-11T16:51:01-07:00</updated>
+    <id>http://scottdomes.com/blog/create-a-django-api-in-under-20-minutes</id>
+    <content type="html"><![CDATA[<p>Django is by far the most popular Python framework, designed to provide
+Rails-like ease of use. Let’s see how quickly we can set up a simple API using
+Django and a library called TastyPie.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/2000/1*cGZQTle3SrxD9STT9LuuMQ.png" alt="" /></p>
+
+<!--more-->
+
+
+<p>For those of you who read the <a href="https://medium.com/@scottdomes/building-a-simple-node-js-api-in-under-30-minutes-a07ea9e390d2#.mov6a516k">Node API
+tutorial</a>,
+we’re now going to attempt to do the same thing with Django. We’ll also very
+quickly see how Django makes some things harder, and some things much much
+easier.</p>
+
+<p><strong>Who This Tutorial Is For</strong>: You should have a basic understanding of REST APIs
+and CRUD operations. Python knowledge is a plus but not necessary. You’ll pick
+it up.</p>
+
+<p>We’ll be building an API for a Google Keep-esque note-taking web app. We want to
+build a REST-ful API with the CRUD endpoints, to create, read, update, and
+delete notes. The good news is that rather than approach these endpoints
+individually, Django lets us more or less create them all in one fell swoop.</p>
+
+<h3><strong>Setting Up Our Project</strong></h3>
+
+<p>Django divides your work into projects and apps. Projects contain apps, but apps
+do not necessarily belong to a certain project — the idea is to make them
+reusable across projects.</p>
+
+<p>We’ll only be making one app within one project, but the file structure may seem
+a little odd if you don’t keep this in mind.</p>
+
+<p><a href="https://www.python.org/downloads/">Install Python</a> if you haven’t done so, then
+let’s install Django and create our project:
+<code>
+    pip install Django
+    django-admin startproject notable_django
+    cd notable_django
+</code>
+Next we’ll install
+<a href="https://github.com/django-tastypie/django-tastypie">TastyPie</a>, which will
+supply us with a REST framework.
+<code>
+    pip install django-tastypie
+</code>
+Finally, we can start our app within our project:
+<code>
+    python manage.py startapp api
+</code>
+Within your notable_django directory, you should now have two subfolders: one
+also called notable_django, and another named api (as well as a manage.py file).</p>
+
+<p>The distinction between the two can be thought of like this: the notable_django
+contains the settings for the configuration of the project, as well as exposing
+URLs. The api folder handles the actual API magic.</p>
+
+<p>Before we go on, we have to install our app within our project, inside
+notable_django/settings-py:
+``` python
+    # notable_django/settings.py</p>
+
+<pre><code>INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+</code></pre>
+
+<pre><code>Again, our project can have multiple apps installed — and those apps aren’t
+necessarily tied to that project. Our project here is notable_django, and our
+app is called api.
+
+With that done, we’re ready to start building.
+
+### A Model Start
+
+The first thing we need to create is a Note model to interact with.
+
+For those unfamiliar with models, [this
+description](https://docs.djangoproject.com/en/1.10/topics/db/models/) from the
+Django docs is as good as any:
+
+&gt; A model is the single, definitive source of information about your data. It
+&gt; contains the essential fields and behaviors of the data you’re storing.
+Generally, each model maps to a single database table.
+
+Django is unique (compared to a framework like Ruby on Rails) in that your
+migrations follow how you define your models, rather than being separately
+defined.
+
+We’re going to create our Note model, and then run our migrations, which will
+set up our database with a notes table (with all the appropriate fields).
+
+Let’s create our model, in api/models.py
+</code></pre>
+
+<pre><code># api/models.py
+
+class Note(models.Model):
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+</code></pre>
+
+<pre><code>We define our fields, along with the type of each.
+
+The next thing we want to do is add a __str__ method to the model. This method
+defines what we get when we ask for a particular instance of a model.
+
+For example, this:
+</code></pre>
+
+<pre><code># api/models.py
+
+class Note(models.Model):
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+def __str__(self):
+        return self.title
+</code></pre>
+
+<pre><code>… means that when we grab any Note model, we’ll get back only the title. This
+just keeps things clean. (We will only be interacting with our models in this
+manner through the Python shell, so it’s not super necessary, but good to be
+aware of).
+
+Let’s expand our __str__ method to also include the body:
+</code></pre>
+
+<pre><code># api/models.py
+
+class Note(models.Model):
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+def __str__(self):
+        return '%s %s' % (self.title, self.body)
+</code></pre>
+
+<pre><code>Okay, our model is all set up. Now to run our migrations, which will set up our
+database.
+</code></pre>
+
+<pre><code>python manage.py makemigrations
+python manage.py migrate
+</code></pre>
+
+<pre><code>Let’s go ahead and populate our database with a single note, to make sure all is
+well:
+</code></pre>
+
+<pre><code>python manage.py shell
+&gt;&gt;&gt; from api.models import Note
+&gt;&gt;&gt; note = Note(title="First Note", body="This is certainly noteworthy")
+&gt;&gt;&gt; note.save()
+&gt;&gt;&gt; Note.objects.all()
+&lt;QuerySet [&lt;Note: First Note This is certainly noteworthy&gt;]&gt;
+&gt;&gt;&gt; exit()
+</code></pre>
+
+<pre><code>We create our note, save it, then retrieve all notes. You can see our __str__
+method at work, returning both the title and the body.
+
+(If you want to learn more about the Note.objects manager, [see
+here](https://docs.djangoproject.com/en/1.10/topics/db/managers/#django.db.models.Manager)).
+
+### API-ification
+
+Okay, so our model and database are all ready to go. Now to expose some
+endpoints to the wider world, so we can interact with our data.
+
+One of the basics of RESTful APIs is the idea of resources. The term is rather
+abstract, but in this context it refers to a class that sits between our URLs
+and our models.
+
+A user will make a request to an endpoint. Depending on the URL, the user will
+be redirected to a particular resource, which will then perform the appropriate
+CRUD action on the model.
+
+Again, this is a simplified explanation of a complex topic — let’s go ahead and
+see it in practice:
+
+In your api folder, create a new file called *resources.py.*
+</code></pre>
+
+<pre><code># api/resources.py
+
+from tastypie.resources import ModelResource
+from api.models import Note
+
+class NoteResource(ModelResource):
+    class Meta:
+        queryset = Note.objects.all()
+        resource_name = 'note'
+</code></pre>
+
+<pre><code>We import our model, and create a resource from it. The *queryset* (what models
+the resource is concerned with) is all note objects.
+
+We also name the resource appropriately: ‘note’. This will be important for
+URLs.
+
+Speaking of which, let’s set those up in our notable_django/urls.py file:
+</code></pre>
+
+<pre><code>from django.conf.urls import url
+from django.contrib import admin
+
+
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+]
+</code></pre>
+
+<pre><code>We import our NoteResource, instantiate it, and then say that we want all URLs
+that start with api/ to redirect to the resource. (Don’t forget to import
+*include *from django.conf.urls).
+
+### Testing Our API
+
+Finally, we can get running. As in the Node tutorial, we’re going to use Postman
+to make API requests. You can get it [here](https://www.getpostman.com/).
+</code></pre>
+
+<pre><code>python manage.py runserver
+</code></pre>
+
+<pre><code>Now in Postman, let’s send a GET request to this URL:
+[http://localhost:8000/api/note/1](http://localhost:8000/api/note/1)
+
+![](https://cdn-images-1.medium.com/max/800/1*8Paypbwf_k8z-csMl2xpVw.png)
+
+Great! Our GET endpoint is working perfectly. Easy.
+
+Now let’s try to create a new note from Postman.
+
+### POST, PUT, DELETE
+
+We’re going to send a raw JSON object as our new note, like so:
+
+![](https://cdn-images-1.medium.com/max/800/1*bbtveT-w_9ji_nfjz9-pMA.png)
+
+Make sure you select JSON from the orange dropdown there! This will set a
+Content-Type header (which you can view under the Headers tab).
+
+Also make sure you send the request to
+[http://localhost:8000/api/note](http://localhost:8000/api/note/1)/, not
+[http://localhost:8000/api/note](http://localhost:8000/api/note/1). That
+trailing slash is important, since otherwise Django has to redirect you, losing
+the POST data.
+
+Send that request and… it fails. We get back a 401, AKA Unauthorized.
+
+TastyPie is protective of its models out of the box, and only allows reading,
+not modifying, the data.
+
+It’s an easy fix, though — import their basic Authorization class, and add it to
+our resource.
+</code></pre>
+
+<pre><code># api/resources.py
+
+from tastypie.resources import ModelResource
+from api.models import Note
+from tastypie.authorization import Authorization
+
+class NoteResource(ModelResource):
+    class Meta:
+        queryset = Note.objects.all()
+        resource_name = 'note'
+        authorization = Authorization()
+</code></pre>
+
+<pre><code>Now it works! Try the request, and we get back 201, AKA success!
+
+To double check, you can send a GET request to
+[http://localhost:8000/api/note](http://localhost:8000/api/note/1). You should
+get back both notes.
+
+Important warning: the Authorization class with TastyPie is, in their words,
+great for development — but not suitable for actual deployment. You can dive
+deeper into TastyPie authorization
+[here](http://django-tastypie.readthedocs.io/en/latest/authorization.html).
+
+### All the Endpoints
+
+Okay, so we finished our GET and POST endpoints. What about PUT and DELETE?
+
+Well, the magic of TastyPie is that they’re already done. Try updating or
+deleting your first note by ending PUT or DELETE to
+[http://localhost:8000/api/note/1/](http://localhost:8000/api/note/1/). It just
+works!
+
+Just like that, we created a working RESTful API.
+
+### Limiting Fields
+
+If you wanted to only send specific information about a resource, you can limit
+fields like so:
+</code></pre>
+
+<pre><code>from tastypie.resources import ModelResource
+from api.models import Note
+from tastypie.authorization import Authorization
+
+class NoteResource(ModelResource):
+    class Meta:
+        queryset = Note.objects.all()
+        resource_name = 'note'
+        authorization = Authorization()
+        fields = ['title', 'body']
+</code></pre>
+
+<p>```
+Now you won’t see our created_at field in any requests.</p>
+
+<h3>Final Notes</h3>
+
+<p>Thanks for reading. If this tutorial has been helpful, please share it with your friends and fellow devs.</p>
+
+<p>You can also follow me for more tutorials and guides. And, as always, please
+leave any feedback or questions in the comments!</p>
+]]></content>
+  </entry>
+  
+</feed>

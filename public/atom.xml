@@ -4,7 +4,7 @@
   <title><![CDATA[Scott Domes | Web Developer]]></title>
   <link href="http://scottdomes.com/atom.xml" rel="self"/>
   <link href="http://scottdomes.com/"/>
-  <updated>2017-08-11T17:30:54-07:00</updated>
+  <updated>2017-08-11T17:34:29-07:00</updated>
   <id>http://scottdomes.com/</id>
   <author>
     <name><![CDATA[Scott Domes]]></name>
@@ -90,7 +90,424 @@
     <link href="http://scottdomes.com/blog/create-a-django-api-in-under-20-minutes/"/>
     <updated>2017-08-11T16:51:01-07:00</updated>
     <id>http://scottdomes.com/blog/create-a-django-api-in-under-20-minutes</id>
-    <content type="html"><![CDATA[
+    <content type="html"><![CDATA[<p>Django is by far the most popular Python framework, designed to provide
+Rails-like ease of use. Let’s see how quickly we can set up a simple API using
+Django and a library called TastyPie.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/2000/1*cGZQTle3SrxD9STT9LuuMQ.png" alt="" /></p>
+
+<!--more-->
+
+
+<p>For those of you who read the <a href="https://medium.com/@scottdomes/building-a-simple-node-js-api-in-under-30-minutes-a07ea9e390d2#.mov6a516k">Node API
+tutorial</a>,
+we’re now going to attempt to do the same thing with Django. We’ll also very
+quickly see how Django makes some things harder, and some things much much
+easier.</p>
+
+<p><strong>Who This Tutorial Is For</strong>: You should have a basic understanding of REST APIs
+and CRUD operations. Python knowledge is a plus but not necessary. You’ll pick
+it up.</p>
+
+<p>We’ll be building an API for a Google Keep-esque note-taking web app. We want to
+build a REST-ful API with the CRUD endpoints, to create, read, update, and
+delete notes. The good news is that rather than approach these endpoints
+individually, Django lets us more or less create them all in one fell swoop.</p>
+
+<h3><strong>Setting Up Our Project</strong></h3>
+
+<p>Django divides your work into projects and apps. Projects contain apps, but apps
+do not necessarily belong to a certain project — the idea is to make them
+reusable across projects.</p>
+
+<p>We’ll only be making one app within one project, but the file structure may seem
+a little odd if you don’t keep this in mind.</p>
+
+<p><a href="https://www.python.org/downloads/">Install Python</a> if you haven’t done so, then
+let’s install Django and create our project:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>pip install Django
+</span><span class='line'>django-admin startproject notable_django
+</span><span class='line'>cd notable_django</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Next we’ll install
+<a href="https://github.com/django-tastypie/django-tastypie">TastyPie</a>, which will
+supply us with a REST framework.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>pip install django-tastypie</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Finally, we can start our app within our project:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>python manage.py startapp api</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Within your notable_django directory, you should now have two subfolders: one
+also called notable_django, and another named api (as well as a manage.py file).</p>
+
+<p>The distinction between the two can be thought of like this: the notable_django
+contains the settings for the configuration of the project, as well as exposing
+URLs. The api folder handles the actual API magic.</p>
+
+<p>Before we go on, we have to install our app within our project, inside
+notable_django/settings-py:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># notable_django/settings.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'>    <span class="s">&#39;django.contrib.admin&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s">&#39;django.contrib.auth&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s">&#39;django.contrib.contenttypes&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s">&#39;django.contrib.sessions&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s">&#39;django.contrib.messages&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s">&#39;django.contrib.staticfiles&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Again, our project can have multiple apps installed — and those apps aren’t
+necessarily tied to that project. Our project here is notable_django, and our
+app is called api.</p>
+
+<p>With that done, we’re ready to start building.</p>
+
+<h3>A Model Start</h3>
+
+<p>The first thing we need to create is a Note model to interact with.</p>
+
+<p>For those unfamiliar with models, <a href="https://docs.djangoproject.com/en/1.10/topics/db/models/">this
+description</a> from the
+Django docs is as good as any:</p>
+
+<blockquote><p>A model is the single, definitive source of information about your data. It
+contains the essential fields and behaviors of the data you’re storing.
+Generally, each model maps to a single database table.</p></blockquote>
+
+<p>Django is unique (compared to a framework like Ruby on Rails) in that your
+migrations follow how you define your models, rather than being separately
+defined.</p>
+
+<p>We’re going to create our Note model, and then run our migrations, which will
+set up our database with a notes table (with all the appropriate fields).</p>
+
+<p>Let’s create our model, in api/models.py</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># api/models.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Note</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">body</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">created_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We define our fields, along with the type of each.</p>
+
+<p>The next thing we want to do is add a <strong>str</strong> method to the model. This method
+defines what we get when we ask for a particular instance of a model.</p>
+
+<p>For example, this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># api/models.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Note</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">body</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">created_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>… means that when we grab any Note model, we’ll get back only the title. This
+just keeps things clean. (We will only be interacting with our models in this
+manner through the Python shell, so it’s not super necessary, but good to be
+aware of).</p>
+
+<p>Let’s expand our <strong>str</strong> method to also include the body:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># api/models.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Note</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">body</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">created_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Okay, our model is all set up. Now to run our migrations, which will set up our
+database.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">makemigrations</span>
+</span><span class='line'><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">migrate</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Let’s go ahead and populate our database with a single note, to make sure all is
+well:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">shell</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">api.models</span> <span class="kn">import</span> <span class="n">Note</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">note</span> <span class="o">=</span> <span class="n">Note</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s">&quot;First Note&quot;</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="s">&quot;This is certainly noteworthy&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">note</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">Note</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">QuerySet</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">Note</span><span class="p">:</span> <span class="n">First</span> <span class="n">Note</span> <span class="n">This</span> <span class="ow">is</span> <span class="n">certainly</span> <span class="n">noteworthy</span><span class="o">&gt;</span><span class="p">]</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="nb">exit</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We create our note, save it, then retrieve all notes. You can see our <strong>str</strong>
+method at work, returning both the title and the body.</p>
+
+<p>(If you want to learn more about the Note.objects manager, <a href="https://docs.djangoproject.com/en/1.10/topics/db/managers/#django.db.models.Manager">see
+here</a>).</p>
+
+<h3>API-ification</h3>
+
+<p>Okay, so our model and database are all ready to go. Now to expose some
+endpoints to the wider world, so we can interact with our data.</p>
+
+<p>One of the basics of RESTful APIs is the idea of resources. The term is rather
+abstract, but in this context it refers to a class that sits between our URLs
+and our models.</p>
+
+<p>A user will make a request to an endpoint. Depending on the URL, the user will
+be redirected to a particular resource, which will then perform the appropriate
+CRUD action on the model.</p>
+
+<p>Again, this is a simplified explanation of a complex topic — let’s go ahead and
+see it in practice:</p>
+
+<p>In your api folder, create a new file called <em>resources.py.</em></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># api/resources.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">from</span> <span class="nn">tastypie.resources</span> <span class="kn">import</span> <span class="n">ModelResource</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">api.models</span> <span class="kn">import</span> <span class="n">Note</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">NoteResource</span><span class="p">(</span><span class="n">ModelResource</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">queryset</span> <span class="o">=</span> <span class="n">Note</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</span><span class='line'>        <span class="n">resource_name</span> <span class="o">=</span> <span class="s">&#39;note&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We import our model, and create a resource from it. The <em>queryset</em> (what models
+the resource is concerned with) is all note objects.</p>
+
+<p>We also name the resource appropriately: ‘note’. This will be important for
+URLs.</p>
+
+<p>Speaking of which, let’s set those up in our notable_django/urls.py file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">django.conf.urls</span> <span class="kn">import</span> <span class="n">url</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'>    <span class="n">url</span><span class="p">(</span><span class="s">r&#39;^admin/&#39;</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">urls</span><span class="p">),</span>
+</span><span class='line'><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We import our NoteResource, instantiate it, and then say that we want all URLs
+that start with api/ to redirect to the resource. (Don’t forget to import
+<em>include </em>from django.conf.urls).</p>
+
+<h3>Testing Our API</h3>
+
+<p>Finally, we can get running. As in the Node tutorial, we’re going to use Postman
+to make API requests. You can get it <a href="https://www.getpostman.com/">here</a>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">runserver</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now in Postman, let’s send a GET request to this URL:
+<a href="http://localhost:8000/api/note/1">http://localhost:8000/api/note/1</a></p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*8Paypbwf_k8z-csMl2xpVw.png" alt="" /></p>
+
+<p>Great! Our GET endpoint is working perfectly. Easy.</p>
+
+<p>Now let’s try to create a new note from Postman.</p>
+
+<h3>POST, PUT, DELETE</h3>
+
+<p>We’re going to send a raw JSON object as our new note, like so:</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*bbtveT-w_9ji_nfjz9-pMA.png" alt="" /></p>
+
+<p>Make sure you select JSON from the orange dropdown there! This will set a
+Content-Type header (which you can view under the Headers tab).</p>
+
+<p>Also make sure you send the request to
+<a href="http://localhost:8000/api/note/1">http://localhost:8000/api/note</a>/, not
+<a href="http://localhost:8000/api/note/1">http://localhost:8000/api/note</a>. That
+trailing slash is important, since otherwise Django has to redirect you, losing
+the POST data.</p>
+
+<p>Send that request and… it fails. We get back a 401, AKA Unauthorized.</p>
+
+<p>TastyPie is protective of its models out of the box, and only allows reading,
+not modifying, the data.</p>
+
+<p>It’s an easy fix, though — import their basic Authorization class, and add it to
+our resource.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># api/resources.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">from</span> <span class="nn">tastypie.resources</span> <span class="kn">import</span> <span class="n">ModelResource</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">api.models</span> <span class="kn">import</span> <span class="n">Note</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">tastypie.authorization</span> <span class="kn">import</span> <span class="n">Authorization</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">NoteResource</span><span class="p">(</span><span class="n">ModelResource</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">queryset</span> <span class="o">=</span> <span class="n">Note</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</span><span class='line'>        <span class="n">resource_name</span> <span class="o">=</span> <span class="s">&#39;note&#39;</span>
+</span><span class='line'>        <span class="n">authorization</span> <span class="o">=</span> <span class="n">Authorization</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now it works! Try the request, and we get back 201, AKA success!</p>
+
+<p>To double check, you can send a GET request to
+<a href="http://localhost:8000/api/note/1">http://localhost:8000/api/note</a>. You should
+get back both notes.</p>
+
+<p>Important warning: the Authorization class with TastyPie is, in their words,
+great for development — but not suitable for actual deployment. You can dive
+deeper into TastyPie authorization
+<a href="http://django-tastypie.readthedocs.io/en/latest/authorization.html">here</a>.</p>
+
+<h3>All the Endpoints</h3>
+
+<p>Okay, so we finished our GET and POST endpoints. What about PUT and DELETE?</p>
+
+<p>Well, the magic of TastyPie is that they’re already done. Try updating or
+deleting your first note by ending PUT or DELETE to
+<a href="http://localhost:8000/api/note/1/">http://localhost:8000/api/note/1/</a>. It just
+works!</p>
+
+<p>Just like that, we created a working RESTful API.</p>
+
+<h3>Limiting Fields</h3>
+
+<p>If you wanted to only send specific information about a resource, you can limit
+fields like so:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">tastypie.resources</span> <span class="kn">import</span> <span class="n">ModelResource</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">api.models</span> <span class="kn">import</span> <span class="n">Note</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">tastypie.authorization</span> <span class="kn">import</span> <span class="n">Authorization</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">NoteResource</span><span class="p">(</span><span class="n">ModelResource</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">queryset</span> <span class="o">=</span> <span class="n">Note</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</span><span class='line'>        <span class="n">resource_name</span> <span class="o">=</span> <span class="s">&#39;note&#39;</span>
+</span><span class='line'>        <span class="n">authorization</span> <span class="o">=</span> <span class="n">Authorization</span><span class="p">()</span>
+</span><span class='line'>        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">,</span> <span class="s">&#39;body&#39;</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now you won’t see our created_at field in any requests.</p>
+
+<h3>Final Notes</h3>
+
+<p>Thanks for reading. If this tutorial has been helpful, please share it with your friends and fellow devs.</p>
+
+<p>You can also follow me for more tutorials and guides. And, as always, please
+leave any feedback or questions in the comments!</p>
 ]]></content>
   </entry>
   
@@ -886,9 +1303,9 @@ Node, and MongoDB — you can use your simple app as a launching pad for more
 complex projects.</p>
 
 <p>In the future I’ll be writing tutorials to create more simple API’s in different
-languages and frameworks. Hit the follow button if you’re interested!</p>
+languages and frameworks.</p>
 
-<p>If this tutorial was any help to you, please hit the green heart below- it means
+<p>If this tutorial was any help to you, please share it with friends and colleagues- it means
 a lot. Feel free to also leave me a comment with any feedback or questions.</p>
 
 <p>Thanks for reading!</p>

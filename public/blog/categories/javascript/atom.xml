@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Javascript | Scott Domes | Web Developer]]></title>
   <link href="http://scottdomes.com/blog/categories/javascript/atom.xml" rel="self"/>
   <link href="http://scottdomes.com/"/>
-  <updated>2017-08-11T17:30:54-07:00</updated>
+  <updated>2017-08-11T17:34:29-07:00</updated>
   <id>http://scottdomes.com/</id>
   <author>
     <name><![CDATA[Scott Domes]]></name>
@@ -1430,9 +1430,9 @@ npm install --save-dev nodemon
 </span><span class='line'><span class="nx">complex</span> <span class="nx">projects</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">In</span> <span class="nx">the</span> <span class="nx">future</span> <span class="nx">I</span><span class="err">’</span><span class="nx">ll</span> <span class="nx">be</span> <span class="nx">writing</span> <span class="nx">tutorials</span> <span class="nx">to</span> <span class="nx">create</span> <span class="nx">more</span> <span class="nx">simple</span> <span class="nx">API</span><span class="err">’</span><span class="nx">s</span> <span class="k">in</span> <span class="nx">different</span>
-</span><span class='line'><span class="nx">languages</span> <span class="nx">and</span> <span class="nx">frameworks</span><span class="p">.</span> <span class="nx">Hit</span> <span class="nx">the</span> <span class="nx">follow</span> <span class="nx">button</span> <span class="k">if</span> <span class="nx">you</span><span class="err">’</span><span class="nx">re</span> <span class="nx">interested</span><span class="o">!&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'><span class="nx">languages</span> <span class="nx">and</span> <span class="nx">frameworks</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">If</span> <span class="k">this</span> <span class="nx">tutorial</span> <span class="nx">was</span> <span class="nx">any</span> <span class="nx">help</span> <span class="nx">to</span> <span class="nx">you</span><span class="p">,</span> <span class="nx">please</span> <span class="nx">hit</span> <span class="nx">the</span> <span class="nx">green</span> <span class="nx">heart</span> <span class="nx">below</span><span class="o">-</span> <span class="nx">it</span> <span class="nx">means</span>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">If</span> <span class="k">this</span> <span class="nx">tutorial</span> <span class="nx">was</span> <span class="nx">any</span> <span class="nx">help</span> <span class="nx">to</span> <span class="nx">you</span><span class="p">,</span> <span class="nx">please</span> <span class="nx">share</span> <span class="nx">it</span> <span class="kd">with</span> <span class="nx">friends</span> <span class="nx">and</span> <span class="nx">colleagues</span><span class="o">-</span> <span class="nx">it</span> <span class="nx">means</span>
 </span><span class='line'><span class="nx">a</span> <span class="nx">lot</span><span class="p">.</span> <span class="nx">Feel</span> <span class="nx">free</span> <span class="nx">to</span> <span class="nx">also</span> <span class="nx">leave</span> <span class="nx">me</span> <span class="nx">a</span> <span class="nx">comment</span> <span class="kd">with</span> <span class="nx">any</span> <span class="nx">feedback</span> <span class="nx">or</span> <span class="nx">questions</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">Thanks</span> <span class="k">for</span> <span class="nx">reading</span><span class="o">!&lt;</span><span class="err">/p&gt;</span>

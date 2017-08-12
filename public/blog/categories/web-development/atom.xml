@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Web Development | Scott Domes | Web Developer]]></title>
   <link href="http://scottdomes.com/blog/categories/web-development/atom.xml" rel="self"/>
   <link href="http://scottdomes.com/"/>
-  <updated>2017-08-11T17:30:54-07:00</updated>
+  <updated>2017-08-11T17:34:29-07:00</updated>
   <id>http://scottdomes.com/</id>
   <author>
     <name><![CDATA[Scott Domes]]></name>
@@ -14,60 +14,722 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Build a Node.js API in Under 30 Minutes]]></title>
-    <link href="http://scottdomes.com/blog/build-a-node-dot-js-api-in-under-30-minutes/"/>
-    <updated>2017-08-11T16:50:51-07:00</updated>
-    <id>http://scottdomes.com/blog/build-a-node-dot-js-api-in-under-30-minutes</id>
-    <content type="html"><![CDATA[<p>Node.js can be intimidating to beginners. But its flexible structure and lack of
-strict guidelines makes it seem more complicated than it is.</p>
+    <title type="html"><![CDATA[Create a Django API in Under 20 Minutes]]></title>
+    <link href="http://scottdomes.com/blog/create-a-django-api-in-under-20-minutes/"/>
+    <updated>2017-08-11T16:51:01-07:00</updated>
+    <id>http://scottdomes.com/blog/create-a-django-api-in-under-20-minutes</id>
+    <content type="html"><![CDATA[<p>Django is by far the most popular Python framework, designed to provide
+Rails-like ease of use. Let’s see how quickly we can set up a simple API using
+Django and a library called TastyPie.</p>
 
-<p>This tutorial is a quick and simple guide to Node.js, the Express framework, and
-MongoDB, focusing on the fundamental REST routes and basic database interaction.
-You’ll build a simple API boilerplate that can then be used as the foundation
-for any app.</p>
-
-<p><img src="https://cdn-images-1.medium.com/max/800/1*s5LVdcugM62xzSvGUpTLWA.png" alt="" /></p>
+<p><img src="https://cdn-images-1.medium.com/max/2000/1*cGZQTle3SrxD9STT9LuuMQ.png" alt="" /></p>
 
 <!--more-->
 
 
+<p>For those of you who read the <a href="https://medium.com/@scottdomes/building-a-simple-node-js-api-in-under-30-minutes-a07ea9e390d2#.mov6a516k">Node API
+tutorial</a>,
+we’re now going to attempt to do the same thing with Django. We’ll also very
+quickly see how Django makes some things harder, and some things much much
+easier.</p>
+
 <p><strong>Who This Tutorial Is For</strong>: You should have a basic understanding of REST APIs
-and CRUD operations, plus basic JavaScript knowledge. I use ES6 (mainly
-fat-arrow functions), but nothing too complex.</p>
+and CRUD operations. Python knowledge is a plus but not necessary. You’ll pick
+it up.</p>
 
-<p>For this tutorial, you’ll create the skeleton of a back-end for a note-taking
-application — think <a href="http://keep.google.com/">Google Keep</a>. You want to be able
-to do all four CRUD actions on your notes: create, read, update, and delete.</p>
+<p>We’ll be building an API for a Google Keep-esque note-taking web app. We want to
+build a REST-ful API with the CRUD endpoints, to create, read, update, and
+delete notes. The good news is that rather than approach these endpoints
+individually, Django lets us more or less create them all in one fell swoop.</p>
 
-<h3>Setting Up</h3>
+<h3><strong>Setting Up Our Project</strong></h3>
 
-<p>If you don’t have Node installed, <a href="https://howtonode.org/how-to-install-nodejs">see
-here</a>.</p>
+<p>Django divides your work into projects and apps. Projects contain apps, but apps
+do not necessarily belong to a certain project — the idea is to make them
+reusable across projects.</p>
 
-<p>In a new directory, run npm init, and follow along with the prompts, giving your
-app the name of ‘notable’ (or whatever else you might like).
+<p>We’ll only be making one app within one project, but the file structure may seem
+a little odd if you don’t keep this in mind.</p>
+
+<p><a href="https://www.python.org/downloads/">Install Python</a> if you haven’t done so, then
+let’s install Django and create our project:
 <code>
-    npm init
+    pip install Django
+    django-admin startproject notable_django
+    cd notable_django
 </code>
-Once that’s done, you should have a <em>package.json </em>ready to go in your
-directory. This means you can start installing the dependencies you need for
-your project.</p>
-
-<p>You’re going to use Express as your framework, MongoDB as the database, and a
-package called body-parser to help deal with JSON requests.
+Next we’ll install
+<a href="https://github.com/django-tastypie/django-tastypie">TastyPie</a>, which will
+supply us with a REST framework.
 <code>
-npm install --save express mongodb body-parser
+    pip install django-tastypie
 </code>
-I also highly recommend installing Nodemon as a dev dependency. It’s a simple
-little package that automatically restarts your server when files change.</p>
-
-<p>If you run:
+Finally, we can start our app within our project:
 <code>
-npm install --save-dev nodemon
-</code></p>
+    python manage.py startapp api
+</code>
+Within your notable_django directory, you should now have two subfolders: one
+also called notable_django, and another named api (as well as a manage.py file).</p>
 
-<p>You can then add the following script to <em>package.json</em>:
-``` javascript
+<p>The distinction between the two can be thought of like this: the notable_django
+contains the settings for the configuration of the project, as well as exposing
+URLs. The api folder handles the actual API magic.</p>
+
+<p>Before we go on, we have to install our app within our project, inside
+notable_django/settings-py:
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+<span class='line-number'>179</span>
+<span class='line-number'>180</span>
+<span class='line-number'>181</span>
+<span class='line-number'>182</span>
+<span class='line-number'>183</span>
+<span class='line-number'>184</span>
+<span class='line-number'>185</span>
+<span class='line-number'>186</span>
+<span class='line-number'>187</span>
+<span class='line-number'>188</span>
+<span class='line-number'>189</span>
+<span class='line-number'>190</span>
+<span class='line-number'>191</span>
+<span class='line-number'>192</span>
+<span class='line-number'>193</span>
+<span class='line-number'>194</span>
+<span class='line-number'>195</span>
+<span class='line-number'>196</span>
+<span class='line-number'>197</span>
+<span class='line-number'>198</span>
+<span class='line-number'>199</span>
+<span class='line-number'>200</span>
+<span class='line-number'>201</span>
+<span class='line-number'>202</span>
+<span class='line-number'>203</span>
+<span class='line-number'>204</span>
+<span class='line-number'>205</span>
+<span class='line-number'>206</span>
+<span class='line-number'>207</span>
+<span class='line-number'>208</span>
+<span class='line-number'>209</span>
+<span class='line-number'>210</span>
+<span class='line-number'>211</span>
+<span class='line-number'>212</span>
+<span class='line-number'>213</span>
+<span class='line-number'>214</span>
+<span class='line-number'>215</span>
+<span class='line-number'>216</span>
+<span class='line-number'>217</span>
+<span class='line-number'>218</span>
+<span class='line-number'>219</span>
+<span class='line-number'>220</span>
+<span class='line-number'>221</span>
+<span class='line-number'>222</span>
+<span class='line-number'>223</span>
+<span class='line-number'>224</span>
+<span class='line-number'>225</span>
+<span class='line-number'>226</span>
+<span class='line-number'>227</span>
+<span class='line-number'>228</span>
+<span class='line-number'>229</span>
+<span class='line-number'>230</span>
+<span class='line-number'>231</span>
+<span class='line-number'>232</span>
+<span class='line-number'>233</span>
+<span class='line-number'>234</span>
+<span class='line-number'>235</span>
+<span class='line-number'>236</span>
+<span class='line-number'>237</span>
+<span class='line-number'>238</span>
+<span class='line-number'>239</span>
+<span class='line-number'>240</span>
+<span class='line-number'>241</span>
+<span class='line-number'>242</span>
+<span class='line-number'>243</span>
+<span class='line-number'>244</span>
+<span class='line-number'>245</span>
+<span class='line-number'>246</span>
+<span class='line-number'>247</span>
+<span class='line-number'>248</span>
+<span class='line-number'>249</span>
+<span class='line-number'>250</span>
+<span class='line-number'>251</span>
+<span class='line-number'>252</span>
+<span class='line-number'>253</span>
+<span class='line-number'>254</span>
+<span class='line-number'>255</span>
+<span class='line-number'>256</span>
+<span class='line-number'>257</span>
+<span class='line-number'>258</span>
+<span class='line-number'>259</span>
+<span class='line-number'>260</span>
+<span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+<span class='line-number'>269</span>
+<span class='line-number'>270</span>
+<span class='line-number'>271</span>
+<span class='line-number'>272</span>
+<span class='line-number'>273</span>
+<span class='line-number'>274</span>
+<span class='line-number'>275</span>
+<span class='line-number'>276</span>
+<span class='line-number'>277</span>
+<span class='line-number'>278</span>
+<span class='line-number'>279</span>
+<span class='line-number'>280</span>
+<span class='line-number'>281</span>
+<span class='line-number'>282</span>
+<span class='line-number'>283</span>
+<span class='line-number'>284</span>
+<span class='line-number'>285</span>
+<span class='line-number'>286</span>
+<span class='line-number'>287</span>
+<span class='line-number'>288</span>
+<span class='line-number'>289</span>
+<span class='line-number'>290</span>
+<span class='line-number'>291</span>
+<span class='line-number'>292</span>
+<span class='line-number'>293</span>
+<span class='line-number'>294</span>
+<span class='line-number'>295</span>
+<span class='line-number'>296</span>
+<span class='line-number'>297</span>
+<span class='line-number'>298</span>
+<span class='line-number'>299</span>
+<span class='line-number'>300</span>
+<span class='line-number'>301</span>
+<span class='line-number'>302</span>
+<span class='line-number'>303</span>
+<span class='line-number'>304</span>
+<span class='line-number'>305</span>
+<span class='line-number'>306</span>
+<span class='line-number'>307</span>
+<span class='line-number'>308</span>
+<span class='line-number'>309</span>
+<span class='line-number'>310</span>
+<span class='line-number'>311</span>
+<span class='line-number'>312</span>
+<span class='line-number'>313</span>
+<span class='line-number'>314</span>
+<span class='line-number'>315</span>
+<span class='line-number'>316</span>
+<span class='line-number'>317</span>
+<span class='line-number'>318</span>
+<span class='line-number'>319</span>
+<span class='line-number'>320</span>
+<span class='line-number'>321</span>
+<span class='line-number'>322</span>
+<span class='line-number'>323</span>
+<span class='line-number'>324</span>
+<span class='line-number'>325</span>
+<span class='line-number'>326</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># notable_django/settings.py&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'><span class="s">&#39;django.contrib.admin&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="s">&#39;django.contrib.auth&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="s">&#39;django.contrib.contenttypes&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="s">&#39;django.contrib.sessions&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="s">&#39;django.contrib.messages&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="s">&#39;django.contrib.staticfiles&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="p">]</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">Again</span><span class="p">,</span> <span class="n">our</span> <span class="n">project</span> <span class="n">can</span> <span class="n">have</span> <span class="n">multiple</span> <span class="n">apps</span> <span class="n">installed</span> <span class="err">—</span> <span class="ow">and</span> <span class="n">those</span> <span class="n">apps</span> <span class="n">aren</span><span class="err">’</span><span class="n">t</span>
+</span><span class='line'><span class="n">necessarily</span> <span class="n">tied</span> <span class="n">to</span> <span class="n">that</span> <span class="n">project</span><span class="o">.</span> <span class="n">Our</span> <span class="n">project</span> <span class="n">here</span> <span class="ow">is</span> <span class="n">notable_django</span><span class="p">,</span> <span class="ow">and</span> <span class="n">our</span>
+</span><span class='line'><span class="n">app</span> <span class="ow">is</span> <span class="n">called</span> <span class="n">api</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">With</span> <span class="n">that</span> <span class="n">done</span><span class="p">,</span> <span class="n">we</span><span class="err">’</span><span class="n">re</span> <span class="n">ready</span> <span class="n">to</span> <span class="n">start</span> <span class="n">building</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">### A Model Start</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">The</span> <span class="n">first</span> <span class="n">thing</span> <span class="n">we</span> <span class="n">need</span> <span class="n">to</span> <span class="n">create</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">Note</span> <span class="n">model</span> <span class="n">to</span> <span class="n">interact</span> <span class="k">with</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">For</span> <span class="n">those</span> <span class="n">unfamiliar</span> <span class="k">with</span> <span class="n">models</span><span class="p">,</span> <span class="p">[</span><span class="n">this</span>
+</span><span class='line'><span class="n">description</span><span class="p">](</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">docs</span><span class="o">.</span><span class="n">djangoproject</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="mf">1.10</span><span class="o">/</span><span class="n">topics</span><span class="o">/</span><span class="n">db</span><span class="o">/</span><span class="n">models</span><span class="o">/</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">the</span>
+</span><span class='line'><span class="n">Django</span> <span class="n">docs</span> <span class="ow">is</span> <span class="k">as</span> <span class="n">good</span> <span class="k">as</span> <span class="nb">any</span><span class="p">:</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">A</span> <span class="n">model</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">single</span><span class="p">,</span> <span class="n">definitive</span> <span class="n">source</span> <span class="n">of</span> <span class="n">information</span> <span class="n">about</span> <span class="n">your</span> <span class="n">data</span><span class="o">.</span> <span class="n">It</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">contains</span> <span class="n">the</span> <span class="n">essential</span> <span class="n">fields</span> <span class="ow">and</span> <span class="n">behaviors</span> <span class="n">of</span> <span class="n">the</span> <span class="n">data</span> <span class="n">you</span><span class="err">’</span><span class="n">re</span> <span class="n">storing</span><span class="o">.</span>
+</span><span class='line'><span class="n">Generally</span><span class="p">,</span> <span class="n">each</span> <span class="n">model</span> <span class="n">maps</span> <span class="n">to</span> <span class="n">a</span> <span class="n">single</span> <span class="n">database</span> <span class="n">table</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Django</span> <span class="ow">is</span> <span class="n">unique</span> <span class="p">(</span><span class="n">compared</span> <span class="n">to</span> <span class="n">a</span> <span class="n">framework</span> <span class="n">like</span> <span class="n">Ruby</span> <span class="n">on</span> <span class="n">Rails</span><span class="p">)</span> <span class="ow">in</span> <span class="n">that</span> <span class="n">your</span>
+</span><span class='line'><span class="n">migrations</span> <span class="n">follow</span> <span class="n">how</span> <span class="n">you</span> <span class="n">define</span> <span class="n">your</span> <span class="n">models</span><span class="p">,</span> <span class="n">rather</span> <span class="n">than</span> <span class="n">being</span> <span class="n">separately</span>
+</span><span class='line'><span class="n">defined</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">We</span><span class="err">’</span><span class="n">re</span> <span class="n">going</span> <span class="n">to</span> <span class="n">create</span> <span class="n">our</span> <span class="n">Note</span> <span class="n">model</span><span class="p">,</span> <span class="ow">and</span> <span class="n">then</span> <span class="n">run</span> <span class="n">our</span> <span class="n">migrations</span><span class="p">,</span> <span class="n">which</span> <span class="n">will</span>
+</span><span class='line'><span class="nb">set</span> <span class="n">up</span> <span class="n">our</span> <span class="n">database</span> <span class="k">with</span> <span class="n">a</span> <span class="n">notes</span> <span class="n">table</span> <span class="p">(</span><span class="k">with</span> <span class="nb">all</span> <span class="n">the</span> <span class="n">appropriate</span> <span class="n">fields</span><span class="p">)</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Let</span><span class="err">’</span><span class="n">s</span> <span class="n">create</span> <span class="n">our</span> <span class="n">model</span><span class="p">,</span> <span class="ow">in</span> <span class="n">api</span><span class="o">/</span><span class="n">models</span><span class="o">.</span><span class="n">py</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c"># api/models.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Note</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span class='line'><span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'><span class="n">body</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+</span><span class='line'><span class="n">created_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">We</span> <span class="n">define</span> <span class="n">our</span> <span class="n">fields</span><span class="p">,</span> <span class="n">along</span> <span class="k">with</span> <span class="n">the</span> <span class="nb">type</span> <span class="n">of</span> <span class="n">each</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">The</span> <span class="nb">next</span> <span class="n">thing</span> <span class="n">we</span> <span class="n">want</span> <span class="n">to</span> <span class="n">do</span> <span class="ow">is</span> <span class="n">add</span> <span class="n">a</span> <span class="n">__str__</span> <span class="n">method</span> <span class="n">to</span> <span class="n">the</span> <span class="n">model</span><span class="o">.</span> <span class="n">This</span> <span class="n">method</span>
+</span><span class='line'><span class="n">defines</span> <span class="n">what</span> <span class="n">we</span> <span class="n">get</span> <span class="n">when</span> <span class="n">we</span> <span class="n">ask</span> <span class="k">for</span> <span class="n">a</span> <span class="n">particular</span> <span class="n">instance</span> <span class="n">of</span> <span class="n">a</span> <span class="n">model</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">For</span> <span class="n">example</span><span class="p">,</span> <span class="n">this</span><span class="p">:</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c"># api/models.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Note</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span class='line'><span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'><span class="n">body</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+</span><span class='line'><span class="n">created_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="err">…</span> <span class="n">means</span> <span class="n">that</span> <span class="n">when</span> <span class="n">we</span> <span class="n">grab</span> <span class="nb">any</span> <span class="n">Note</span> <span class="n">model</span><span class="p">,</span> <span class="n">we</span><span class="err">’</span><span class="n">ll</span> <span class="n">get</span> <span class="n">back</span> <span class="n">only</span> <span class="n">the</span> <span class="n">title</span><span class="o">.</span> <span class="n">This</span>
+</span><span class='line'><span class="n">just</span> <span class="n">keeps</span> <span class="n">things</span> <span class="n">clean</span><span class="o">.</span> <span class="p">(</span><span class="n">We</span> <span class="n">will</span> <span class="n">only</span> <span class="n">be</span> <span class="n">interacting</span> <span class="k">with</span> <span class="n">our</span> <span class="n">models</span> <span class="ow">in</span> <span class="n">this</span>
+</span><span class='line'><span class="n">manner</span> <span class="n">through</span> <span class="n">the</span> <span class="n">Python</span> <span class="n">shell</span><span class="p">,</span> <span class="n">so</span> <span class="n">it</span><span class="err">’</span><span class="n">s</span> <span class="ow">not</span> <span class="nb">super</span> <span class="n">necessary</span><span class="p">,</span> <span class="n">but</span> <span class="n">good</span> <span class="n">to</span> <span class="n">be</span>
+</span><span class='line'><span class="n">aware</span> <span class="n">of</span><span class="p">)</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Let</span><span class="err">’</span><span class="n">s</span> <span class="n">expand</span> <span class="n">our</span> <span class="n">__str__</span> <span class="n">method</span> <span class="n">to</span> <span class="n">also</span> <span class="n">include</span> <span class="n">the</span> <span class="n">body</span><span class="p">:</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c"># api/models.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Note</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span class='line'><span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'><span class="n">body</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+</span><span class='line'><span class="n">created_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">Okay</span><span class="p">,</span> <span class="n">our</span> <span class="n">model</span> <span class="ow">is</span> <span class="nb">all</span> <span class="nb">set</span> <span class="n">up</span><span class="o">.</span> <span class="n">Now</span> <span class="n">to</span> <span class="n">run</span> <span class="n">our</span> <span class="n">migrations</span><span class="p">,</span> <span class="n">which</span> <span class="n">will</span> <span class="nb">set</span> <span class="n">up</span> <span class="n">our</span>
+</span><span class='line'><span class="n">database</span><span class="o">.</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">makemigrations</span>
+</span><span class='line'><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">migrate</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">Let</span><span class="err">’</span><span class="n">s</span> <span class="n">go</span> <span class="n">ahead</span> <span class="ow">and</span> <span class="n">populate</span> <span class="n">our</span> <span class="n">database</span> <span class="k">with</span> <span class="n">a</span> <span class="n">single</span> <span class="n">note</span><span class="p">,</span> <span class="n">to</span> <span class="n">make</span> <span class="n">sure</span> <span class="nb">all</span> <span class="ow">is</span>
+</span><span class='line'><span class="n">well</span><span class="p">:</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">shell</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="kn">from</span> <span class="nn">api.models</span> <span class="kn">import</span> <span class="n">Note</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">note</span> <span class="o">=</span> <span class="n">Note</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s">&quot;First Note&quot;</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="s">&quot;This is certainly noteworthy&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">note</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">Note</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">QuerySet</span> <span class="p">[</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">Note</span><span class="p">:</span> <span class="n">First</span> <span class="n">Note</span> <span class="n">This</span> <span class="ow">is</span> <span class="n">certainly</span> <span class="n">noteworthy</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;]</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="nb">exit</span><span class="p">()</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">We</span> <span class="n">create</span> <span class="n">our</span> <span class="n">note</span><span class="p">,</span> <span class="n">save</span> <span class="n">it</span><span class="p">,</span> <span class="n">then</span> <span class="n">retrieve</span> <span class="nb">all</span> <span class="n">notes</span><span class="o">.</span> <span class="n">You</span> <span class="n">can</span> <span class="n">see</span> <span class="n">our</span> <span class="n">__str__</span>
+</span><span class='line'><span class="n">method</span> <span class="n">at</span> <span class="n">work</span><span class="p">,</span> <span class="n">returning</span> <span class="n">both</span> <span class="n">the</span> <span class="n">title</span> <span class="ow">and</span> <span class="n">the</span> <span class="n">body</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">(</span><span class="n">If</span> <span class="n">you</span> <span class="n">want</span> <span class="n">to</span> <span class="n">learn</span> <span class="n">more</span> <span class="n">about</span> <span class="n">the</span> <span class="n">Note</span><span class="o">.</span><span class="n">objects</span> <span class="n">manager</span><span class="p">,</span> <span class="p">[</span><span class="n">see</span>
+</span><span class='line'><span class="n">here</span><span class="p">](</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">docs</span><span class="o">.</span><span class="n">djangoproject</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="mf">1.10</span><span class="o">/</span><span class="n">topics</span><span class="o">/</span><span class="n">db</span><span class="o">/</span><span class="n">managers</span><span class="o">/</span><span class="c">#django.db.models.Manager)).</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">### API-ification</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Okay</span><span class="p">,</span> <span class="n">so</span> <span class="n">our</span> <span class="n">model</span> <span class="ow">and</span> <span class="n">database</span> <span class="n">are</span> <span class="nb">all</span> <span class="n">ready</span> <span class="n">to</span> <span class="n">go</span><span class="o">.</span> <span class="n">Now</span> <span class="n">to</span> <span class="n">expose</span> <span class="n">some</span>
+</span><span class='line'><span class="n">endpoints</span> <span class="n">to</span> <span class="n">the</span> <span class="n">wider</span> <span class="n">world</span><span class="p">,</span> <span class="n">so</span> <span class="n">we</span> <span class="n">can</span> <span class="n">interact</span> <span class="k">with</span> <span class="n">our</span> <span class="n">data</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">One</span> <span class="n">of</span> <span class="n">the</span> <span class="n">basics</span> <span class="n">of</span> <span class="n">RESTful</span> <span class="n">APIs</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">idea</span> <span class="n">of</span> <span class="n">resources</span><span class="o">.</span> <span class="n">The</span> <span class="n">term</span> <span class="ow">is</span> <span class="n">rather</span>
+</span><span class='line'><span class="n">abstract</span><span class="p">,</span> <span class="n">but</span> <span class="ow">in</span> <span class="n">this</span> <span class="n">context</span> <span class="n">it</span> <span class="n">refers</span> <span class="n">to</span> <span class="n">a</span> <span class="k">class</span> <span class="nc">that</span> <span class="n">sits</span> <span class="n">between</span> <span class="n">our</span> <span class="n">URLs</span>
+</span><span class='line'><span class="ow">and</span> <span class="n">our</span> <span class="n">models</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">A</span> <span class="n">user</span> <span class="n">will</span> <span class="n">make</span> <span class="n">a</span> <span class="n">request</span> <span class="n">to</span> <span class="n">an</span> <span class="n">endpoint</span><span class="o">.</span> <span class="n">Depending</span> <span class="n">on</span> <span class="n">the</span> <span class="n">URL</span><span class="p">,</span> <span class="n">the</span> <span class="n">user</span> <span class="n">will</span>
+</span><span class='line'><span class="n">be</span> <span class="n">redirected</span> <span class="n">to</span> <span class="n">a</span> <span class="n">particular</span> <span class="n">resource</span><span class="p">,</span> <span class="n">which</span> <span class="n">will</span> <span class="n">then</span> <span class="n">perform</span> <span class="n">the</span> <span class="n">appropriate</span>
+</span><span class='line'><span class="n">CRUD</span> <span class="n">action</span> <span class="n">on</span> <span class="n">the</span> <span class="n">model</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Again</span><span class="p">,</span> <span class="n">this</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">simplified</span> <span class="n">explanation</span> <span class="n">of</span> <span class="n">a</span> <span class="nb">complex</span> <span class="n">topic</span> <span class="err">—</span> <span class="n">let</span><span class="err">’</span><span class="n">s</span> <span class="n">go</span> <span class="n">ahead</span> <span class="ow">and</span>
+</span><span class='line'><span class="n">see</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">practice</span><span class="p">:</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">In</span> <span class="n">your</span> <span class="n">api</span> <span class="n">folder</span><span class="p">,</span> <span class="n">create</span> <span class="n">a</span> <span class="n">new</span> <span class="nb">file</span> <span class="n">called</span> <span class="o">*</span><span class="n">resources</span><span class="o">.</span><span class="n">py</span><span class="o">.*</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c"># api/resources.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">from</span> <span class="nn">tastypie.resources</span> <span class="kn">import</span> <span class="n">ModelResource</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">api.models</span> <span class="kn">import</span> <span class="n">Note</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">NoteResource</span><span class="p">(</span><span class="n">ModelResource</span><span class="p">):</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">queryset</span> <span class="o">=</span> <span class="n">Note</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">resource_name</span> <span class="o">=</span> <span class="s">&#39;note&#39;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">We</span> <span class="kn">import</span> <span class="nn">our</span> <span class="nn">model</span><span class="o">,</span> <span class="nn">and</span> <span class="nn">create</span> <span class="nn">a</span> <span class="nn">resource</span> <span class="nn">from</span> <span class="nn">it.</span> <span class="nn">The</span> <span class="o">*</span><span class="n">queryset</span><span class="o">*</span> <span class="p">(</span><span class="n">what</span> <span class="n">models</span>
+</span><span class='line'><span class="n">the</span> <span class="n">resource</span> <span class="ow">is</span> <span class="n">concerned</span> <span class="k">with</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">all</span> <span class="n">note</span> <span class="n">objects</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">We</span> <span class="n">also</span> <span class="n">name</span> <span class="n">the</span> <span class="n">resource</span> <span class="n">appropriately</span><span class="p">:</span> <span class="err">‘</span><span class="n">note</span><span class="err">’</span><span class="o">.</span> <span class="n">This</span> <span class="n">will</span> <span class="n">be</span> <span class="n">important</span> <span class="k">for</span>
+</span><span class='line'><span class="n">URLs</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Speaking</span> <span class="n">of</span> <span class="n">which</span><span class="p">,</span> <span class="n">let</span><span class="err">’</span><span class="n">s</span> <span class="nb">set</span> <span class="n">those</span> <span class="n">up</span> <span class="ow">in</span> <span class="n">our</span> <span class="n">notable_django</span><span class="o">/</span><span class="n">urls</span><span class="o">.</span><span class="n">py</span> <span class="nb">file</span><span class="p">:</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kn">from</span> <span class="nn">django.conf.urls</span> <span class="kn">import</span> <span class="n">url</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'><span class="n">url</span><span class="p">(</span><span class="s">r&#39;^admin/&#39;</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">urls</span><span class="p">),</span>
+</span><span class='line'><span class="p">]</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">We</span> <span class="kn">import</span> <span class="nn">our</span> <span class="nn">NoteResource</span><span class="o">,</span> <span class="nn">instantiate</span> <span class="nn">it</span><span class="o">,</span> <span class="nn">and</span> <span class="nn">then</span> <span class="nn">say</span> <span class="nn">that</span> <span class="nn">we</span> <span class="nn">want</span> <span class="nn">all</span> <span class="nn">URLs</span>
+</span><span class='line'><span class="n">that</span> <span class="n">start</span> <span class="k">with</span> <span class="n">api</span><span class="o">/</span> <span class="n">to</span> <span class="n">redirect</span> <span class="n">to</span> <span class="n">the</span> <span class="n">resource</span><span class="o">.</span> <span class="p">(</span><span class="n">Don</span><span class="err">’</span><span class="n">t</span> <span class="n">forget</span> <span class="n">to</span> <span class="kn">import</span>
+</span><span class='line'><span class="o">*</span><span class="n">include</span> <span class="o">*</span><span class="kn">from</span> <span class="nn">django.conf.urls</span><span class="p">)</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">### Testing Our API</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Finally</span><span class="p">,</span> <span class="n">we</span> <span class="n">can</span> <span class="n">get</span> <span class="n">running</span><span class="o">.</span> <span class="n">As</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">Node</span> <span class="n">tutorial</span><span class="p">,</span> <span class="n">we</span><span class="err">’</span><span class="n">re</span> <span class="n">going</span> <span class="n">to</span> <span class="n">use</span> <span class="n">Postman</span>
+</span><span class='line'><span class="n">to</span> <span class="n">make</span> <span class="n">API</span> <span class="n">requests</span><span class="o">.</span> <span class="n">You</span> <span class="n">can</span> <span class="n">get</span> <span class="n">it</span> <span class="p">[</span><span class="n">here</span><span class="p">](</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">getpostman</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="p">)</span><span class="o">.</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">runserver</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">Now</span> <span class="ow">in</span> <span class="n">Postman</span><span class="p">,</span> <span class="n">let</span><span class="err">’</span><span class="n">s</span> <span class="n">send</span> <span class="n">a</span> <span class="n">GET</span> <span class="n">request</span> <span class="n">to</span> <span class="n">this</span> <span class="n">URL</span><span class="p">:</span>
+</span><span class='line'><span class="p">[</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">8000</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">note</span><span class="o">/</span><span class="mi">1</span><span class="p">](</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">8000</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">note</span><span class="o">/</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">!</span><span class="p">[](</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">cdn</span><span class="o">-</span><span class="n">images</span><span class="o">-</span><span class="mf">1.</span><span class="n">medium</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="nb">max</span><span class="o">/</span><span class="mi">800</span><span class="o">/</span><span class="mi">1</span><span class="o">*</span><span class="mi">8</span><span class="n">Paypbwf_k8z</span><span class="o">-</span><span class="n">csMl2xpVw</span><span class="o">.</span><span class="n">png</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Great</span><span class="err">!</span> <span class="n">Our</span> <span class="n">GET</span> <span class="n">endpoint</span> <span class="ow">is</span> <span class="n">working</span> <span class="n">perfectly</span><span class="o">.</span> <span class="n">Easy</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Now</span> <span class="n">let</span><span class="err">’</span><span class="n">s</span> <span class="k">try</span> <span class="n">to</span> <span class="n">create</span> <span class="n">a</span> <span class="n">new</span> <span class="n">note</span> <span class="kn">from</span> <span class="nn">Postman.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">### POST, PUT, DELETE</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">We</span><span class="err">’</span><span class="n">re</span> <span class="n">going</span> <span class="n">to</span> <span class="n">send</span> <span class="n">a</span> <span class="n">raw</span> <span class="n">JSON</span> <span class="nb">object</span> <span class="k">as</span> <span class="n">our</span> <span class="n">new</span> <span class="n">note</span><span class="p">,</span> <span class="n">like</span> <span class="n">so</span><span class="p">:</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">!</span><span class="p">[](</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">cdn</span><span class="o">-</span><span class="n">images</span><span class="o">-</span><span class="mf">1.</span><span class="n">medium</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="nb">max</span><span class="o">/</span><span class="mi">800</span><span class="o">/</span><span class="mi">1</span><span class="o">*</span><span class="n">bbtveT</span><span class="o">-</span><span class="n">w_9ji_nfjz9</span><span class="o">-</span><span class="n">pMA</span><span class="o">.</span><span class="n">png</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Make</span> <span class="n">sure</span> <span class="n">you</span> <span class="n">select</span> <span class="n">JSON</span> <span class="kn">from</span> <span class="nn">the</span> <span class="nn">orange</span> <span class="nn">dropdown</span> <span class="nn">there</span><span class="err">!</span> <span class="n">This</span> <span class="n">will</span> <span class="nb">set</span> <span class="n">a</span>
+</span><span class='line'><span class="n">Content</span><span class="o">-</span><span class="n">Type</span> <span class="n">header</span> <span class="p">(</span><span class="n">which</span> <span class="n">you</span> <span class="n">can</span> <span class="n">view</span> <span class="n">under</span> <span class="n">the</span> <span class="n">Headers</span> <span class="n">tab</span><span class="p">)</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Also</span> <span class="n">make</span> <span class="n">sure</span> <span class="n">you</span> <span class="n">send</span> <span class="n">the</span> <span class="n">request</span> <span class="n">to</span>
+</span><span class='line'><span class="p">[</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">8000</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">note</span><span class="p">](</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">8000</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">note</span><span class="o">/</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">,</span> <span class="ow">not</span>
+</span><span class='line'><span class="p">[</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">8000</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">note</span><span class="p">](</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">8000</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">note</span><span class="o">/</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span> <span class="n">That</span>
+</span><span class='line'><span class="n">trailing</span> <span class="n">slash</span> <span class="ow">is</span> <span class="n">important</span><span class="p">,</span> <span class="n">since</span> <span class="n">otherwise</span> <span class="n">Django</span> <span class="n">has</span> <span class="n">to</span> <span class="n">redirect</span> <span class="n">you</span><span class="p">,</span> <span class="n">losing</span>
+</span><span class='line'><span class="n">the</span> <span class="n">POST</span> <span class="n">data</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Send</span> <span class="n">that</span> <span class="n">request</span> <span class="ow">and</span><span class="err">…</span> <span class="n">it</span> <span class="n">fails</span><span class="o">.</span> <span class="n">We</span> <span class="n">get</span> <span class="n">back</span> <span class="n">a</span> <span class="mi">401</span><span class="p">,</span> <span class="n">AKA</span> <span class="n">Unauthorized</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">TastyPie</span> <span class="ow">is</span> <span class="n">protective</span> <span class="n">of</span> <span class="n">its</span> <span class="n">models</span> <span class="n">out</span> <span class="n">of</span> <span class="n">the</span> <span class="n">box</span><span class="p">,</span> <span class="ow">and</span> <span class="n">only</span> <span class="n">allows</span> <span class="n">reading</span><span class="p">,</span>
+</span><span class='line'><span class="ow">not</span> <span class="n">modifying</span><span class="p">,</span> <span class="n">the</span> <span class="n">data</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">It</span><span class="err">’</span><span class="n">s</span> <span class="n">an</span> <span class="n">easy</span> <span class="n">fix</span><span class="p">,</span> <span class="n">though</span> <span class="err">—</span> <span class="kn">import</span> <span class="nn">their</span> <span class="nn">basic</span> <span class="nn">Authorization</span> <span class="nn">class</span><span class="o">,</span> <span class="nn">and</span> <span class="nn">add</span> <span class="nn">it</span> <span class="nn">to</span>
+</span><span class='line'><span class="n">our</span> <span class="n">resource</span><span class="o">.</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c"># api/resources.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">from</span> <span class="nn">tastypie.resources</span> <span class="kn">import</span> <span class="n">ModelResource</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">api.models</span> <span class="kn">import</span> <span class="n">Note</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">tastypie.authorization</span> <span class="kn">import</span> <span class="n">Authorization</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">NoteResource</span><span class="p">(</span><span class="n">ModelResource</span><span class="p">):</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">queryset</span> <span class="o">=</span> <span class="n">Note</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">resource_name</span> <span class="o">=</span> <span class="s">&#39;note&#39;</span>
+</span><span class='line'>    <span class="n">authorization</span> <span class="o">=</span> <span class="n">Authorization</span><span class="p">()</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">Now</span> <span class="n">it</span> <span class="n">works</span><span class="err">!</span> <span class="n">Try</span> <span class="n">the</span> <span class="n">request</span><span class="p">,</span> <span class="ow">and</span> <span class="n">we</span> <span class="n">get</span> <span class="n">back</span> <span class="mi">201</span><span class="p">,</span> <span class="n">AKA</span> <span class="n">success</span><span class="err">!</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">To</span> <span class="n">double</span> <span class="n">check</span><span class="p">,</span> <span class="n">you</span> <span class="n">can</span> <span class="n">send</span> <span class="n">a</span> <span class="n">GET</span> <span class="n">request</span> <span class="n">to</span>
+</span><span class='line'><span class="p">[</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">8000</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">note</span><span class="p">](</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">8000</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">note</span><span class="o">/</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span> <span class="n">You</span> <span class="n">should</span>
+</span><span class='line'><span class="n">get</span> <span class="n">back</span> <span class="n">both</span> <span class="n">notes</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Important</span> <span class="n">warning</span><span class="p">:</span> <span class="n">the</span> <span class="n">Authorization</span> <span class="k">class</span> <span class="nc">with</span> <span class="n">TastyPie</span> <span class="ow">is</span><span class="p">,</span> <span class="ow">in</span> <span class="n">their</span> <span class="n">words</span><span class="p">,</span>
+</span><span class='line'><span class="n">great</span> <span class="k">for</span> <span class="n">development</span> <span class="err">—</span> <span class="n">but</span> <span class="ow">not</span> <span class="n">suitable</span> <span class="k">for</span> <span class="n">actual</span> <span class="n">deployment</span><span class="o">.</span> <span class="n">You</span> <span class="n">can</span> <span class="n">dive</span>
+</span><span class='line'><span class="n">deeper</span> <span class="n">into</span> <span class="n">TastyPie</span> <span class="n">authorization</span>
+</span><span class='line'><span class="p">[</span><span class="n">here</span><span class="p">](</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">django</span><span class="o">-</span><span class="n">tastypie</span><span class="o">.</span><span class="n">readthedocs</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="n">latest</span><span class="o">/</span><span class="n">authorization</span><span class="o">.</span><span class="n">html</span><span class="p">)</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">### All the Endpoints</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Okay</span><span class="p">,</span> <span class="n">so</span> <span class="n">we</span> <span class="n">finished</span> <span class="n">our</span> <span class="n">GET</span> <span class="ow">and</span> <span class="n">POST</span> <span class="n">endpoints</span><span class="o">.</span> <span class="n">What</span> <span class="n">about</span> <span class="n">PUT</span> <span class="ow">and</span> <span class="n">DELETE</span><span class="err">?</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Well</span><span class="p">,</span> <span class="n">the</span> <span class="n">magic</span> <span class="n">of</span> <span class="n">TastyPie</span> <span class="ow">is</span> <span class="n">that</span> <span class="n">they</span><span class="err">’</span><span class="n">re</span> <span class="n">already</span> <span class="n">done</span><span class="o">.</span> <span class="n">Try</span> <span class="n">updating</span> <span class="ow">or</span>
+</span><span class='line'><span class="n">deleting</span> <span class="n">your</span> <span class="n">first</span> <span class="n">note</span> <span class="n">by</span> <span class="n">ending</span> <span class="n">PUT</span> <span class="ow">or</span> <span class="n">DELETE</span> <span class="n">to</span>
+</span><span class='line'><span class="p">[</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">8000</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">note</span><span class="o">/</span><span class="mi">1</span><span class="o">/</span><span class="p">](</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">8000</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">note</span><span class="o">/</span><span class="mi">1</span><span class="o">/</span><span class="p">)</span><span class="o">.</span> <span class="n">It</span> <span class="n">just</span>
+</span><span class='line'><span class="n">works</span><span class="err">!</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Just</span> <span class="n">like</span> <span class="n">that</span><span class="p">,</span> <span class="n">we</span> <span class="n">created</span> <span class="n">a</span> <span class="n">working</span> <span class="n">RESTful</span> <span class="n">API</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">### Limiting Fields</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">If</span> <span class="n">you</span> <span class="n">wanted</span> <span class="n">to</span> <span class="n">only</span> <span class="n">send</span> <span class="n">specific</span> <span class="n">information</span> <span class="n">about</span> <span class="n">a</span> <span class="n">resource</span><span class="p">,</span> <span class="n">you</span> <span class="n">can</span> <span class="n">limit</span>
+</span><span class='line'><span class="n">fields</span> <span class="n">like</span> <span class="n">so</span><span class="p">:</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kn">from</span> <span class="nn">tastypie.resources</span> <span class="kn">import</span> <span class="n">ModelResource</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">api.models</span> <span class="kn">import</span> <span class="n">Note</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">tastypie.authorization</span> <span class="kn">import</span> <span class="n">Authorization</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">NoteResource</span><span class="p">(</span><span class="n">ModelResource</span><span class="p">):</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">queryset</span> <span class="o">=</span> <span class="n">Note</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">resource_name</span> <span class="o">=</span> <span class="s">&#39;note&#39;</span>
+</span><span class='line'>    <span class="n">authorization</span> <span class="o">=</span> <span class="n">Authorization</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">,</span> <span class="s">&#39;body&#39;</span><span class="p">]</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="sb">``</span><span class="err">`</span>
+</span><span class='line'><span class="n">Now</span> <span class="n">you</span> <span class="n">won</span><span class="err">’</span><span class="n">t</span> <span class="n">see</span> <span class="n">our</span> <span class="n">created_at</span> <span class="n">field</span> <span class="ow">in</span> <span class="nb">any</span> <span class="n">requests</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h3</span><span class="o">&gt;</span><span class="n">Final</span> <span class="n">Notes</span><span class="o">&lt;/</span><span class="n">h3</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">Thanks</span> <span class="k">for</span> <span class="n">reading</span><span class="o">.</span> <span class="n">If</span> <span class="n">this</span> <span class="n">tutorial</span> <span class="n">has</span> <span class="n">been</span> <span class="n">helpful</span><span class="p">,</span> <span class="n">please</span> <span class="n">share</span> <span class="n">it</span> <span class="k">with</span> <span class="n">your</span> <span class="n">friends</span> <span class="ow">and</span> <span class="n">fellow</span> <span class="n">devs</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">You</span> <span class="n">can</span> <span class="n">also</span> <span class="n">follow</span> <span class="n">me</span> <span class="k">for</span> <span class="n">more</span> <span class="n">tutorials</span> <span class="ow">and</span> <span class="n">guides</span><span class="o">.</span> <span class="n">And</span><span class="p">,</span> <span class="k">as</span> <span class="n">always</span><span class="p">,</span> <span class="n">please</span>
+</span><span class='line'><span class="n">leave</span> <span class="nb">any</span> <span class="n">feedback</span> <span class="ow">or</span> <span class="n">questions</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">comments</span><span class="err">!</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'><span class="p">]]</span><span class="o">&gt;&lt;/</span><span class="n">content</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;/</span><span class="n">entry</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="o">&lt;</span><span class="n">entry</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">title</span> <span class="nb">type</span><span class="o">=</span><span class="s">&quot;html&quot;</span><span class="o">&gt;&lt;</span><span class="err">!</span><span class="p">[</span><span class="n">CDATA</span><span class="p">[</span><span class="n">Build</span> <span class="n">a</span> <span class="n">Node</span><span class="o">.</span><span class="n">js</span> <span class="n">API</span> <span class="ow">in</span> <span class="n">Under</span> <span class="mi">30</span> <span class="n">Minutes</span><span class="p">]]</span><span class="o">&gt;&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">link</span> <span class="n">href</span><span class="o">=</span><span class="s">&quot;http://scottdomes.com/blog/build-a-node-dot-js-api-in-under-30-minutes/&quot;</span><span class="o">/&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">updated</span><span class="o">&gt;</span><span class="mi">2017</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">11</span><span class="n">T16</span><span class="p">:</span><span class="mi">50</span><span class="p">:</span><span class="mi">51</span><span class="o">-</span><span class="mo">07</span><span class="p">:</span><span class="mo">00</span><span class="o">&lt;/</span><span class="n">updated</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="nb">id</span><span class="o">&gt;</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">scottdomes</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">blog</span><span class="o">/</span><span class="n">build</span><span class="o">-</span><span class="n">a</span><span class="o">-</span><span class="n">node</span><span class="o">-</span><span class="n">dot</span><span class="o">-</span><span class="n">js</span><span class="o">-</span><span class="n">api</span><span class="o">-</span><span class="ow">in</span><span class="o">-</span><span class="n">under</span><span class="o">-</span><span class="mi">30</span><span class="o">-</span><span class="n">minutes</span><span class="o">&lt;/</span><span class="nb">id</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">content</span> <span class="nb">type</span><span class="o">=</span><span class="s">&quot;html&quot;</span><span class="o">&gt;&lt;</span><span class="err">!</span><span class="p">[</span><span class="n">CDATA</span><span class="p">[</span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">Node</span><span class="o">.</span><span class="n">js</span> <span class="n">can</span> <span class="n">be</span> <span class="n">intimidating</span> <span class="n">to</span> <span class="n">beginners</span><span class="o">.</span> <span class="n">But</span> <span class="n">its</span> <span class="n">flexible</span> <span class="n">structure</span> <span class="ow">and</span> <span class="n">lack</span> <span class="n">of</span>
+</span><span class='line'><span class="n">strict</span> <span class="n">guidelines</span> <span class="n">makes</span> <span class="n">it</span> <span class="n">seem</span> <span class="n">more</span> <span class="n">complicated</span> <span class="n">than</span> <span class="n">it</span> <span class="ow">is</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">This</span> <span class="n">tutorial</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">quick</span> <span class="ow">and</span> <span class="n">simple</span> <span class="n">guide</span> <span class="n">to</span> <span class="n">Node</span><span class="o">.</span><span class="n">js</span><span class="p">,</span> <span class="n">the</span> <span class="n">Express</span> <span class="n">framework</span><span class="p">,</span> <span class="ow">and</span>
+</span><span class='line'><span class="n">MongoDB</span><span class="p">,</span> <span class="n">focusing</span> <span class="n">on</span> <span class="n">the</span> <span class="n">fundamental</span> <span class="n">REST</span> <span class="n">routes</span> <span class="ow">and</span> <span class="n">basic</span> <span class="n">database</span> <span class="n">interaction</span><span class="o">.</span>
+</span><span class='line'><span class="n">You</span><span class="err">’</span><span class="n">ll</span> <span class="n">build</span> <span class="n">a</span> <span class="n">simple</span> <span class="n">API</span> <span class="n">boilerplate</span> <span class="n">that</span> <span class="n">can</span> <span class="n">then</span> <span class="n">be</span> <span class="n">used</span> <span class="k">as</span> <span class="n">the</span> <span class="n">foundation</span>
+</span><span class='line'><span class="k">for</span> <span class="nb">any</span> <span class="n">app</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">img</span> <span class="n">src</span><span class="o">=</span><span class="s">&quot;https://cdn-images-1.medium.com/max/800/1*s5LVdcugM62xzSvGUpTLWA.png&quot;</span> <span class="n">alt</span><span class="o">=</span><span class="s">&quot;&quot;</span> <span class="o">/&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="err">!</span><span class="o">--</span><span class="n">more</span><span class="o">--&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">strong</span><span class="o">&gt;</span><span class="n">Who</span> <span class="n">This</span> <span class="n">Tutorial</span> <span class="n">Is</span> <span class="n">For</span><span class="o">&lt;/</span><span class="n">strong</span><span class="o">&gt;</span><span class="p">:</span> <span class="n">You</span> <span class="n">should</span> <span class="n">have</span> <span class="n">a</span> <span class="n">basic</span> <span class="n">understanding</span> <span class="n">of</span> <span class="n">REST</span> <span class="n">APIs</span>
+</span><span class='line'><span class="ow">and</span> <span class="n">CRUD</span> <span class="n">operations</span><span class="p">,</span> <span class="n">plus</span> <span class="n">basic</span> <span class="n">JavaScript</span> <span class="n">knowledge</span><span class="o">.</span> <span class="n">I</span> <span class="n">use</span> <span class="n">ES6</span> <span class="p">(</span><span class="n">mainly</span>
+</span><span class='line'><span class="n">fat</span><span class="o">-</span><span class="n">arrow</span> <span class="n">functions</span><span class="p">),</span> <span class="n">but</span> <span class="n">nothing</span> <span class="n">too</span> <span class="nb">complex</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">For</span> <span class="n">this</span> <span class="n">tutorial</span><span class="p">,</span> <span class="n">you</span><span class="err">’</span><span class="n">ll</span> <span class="n">create</span> <span class="n">the</span> <span class="n">skeleton</span> <span class="n">of</span> <span class="n">a</span> <span class="n">back</span><span class="o">-</span><span class="n">end</span> <span class="k">for</span> <span class="n">a</span> <span class="n">note</span><span class="o">-</span><span class="n">taking</span>
+</span><span class='line'><span class="n">application</span> <span class="err">—</span> <span class="n">think</span> <span class="o">&lt;</span><span class="n">a</span> <span class="n">href</span><span class="o">=</span><span class="s">&quot;http://keep.google.com/&quot;</span><span class="o">&gt;</span><span class="n">Google</span> <span class="n">Keep</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;.</span> <span class="n">You</span> <span class="n">want</span> <span class="n">to</span> <span class="n">be</span> <span class="n">able</span>
+</span><span class='line'><span class="n">to</span> <span class="n">do</span> <span class="nb">all</span> <span class="n">four</span> <span class="n">CRUD</span> <span class="n">actions</span> <span class="n">on</span> <span class="n">your</span> <span class="n">notes</span><span class="p">:</span> <span class="n">create</span><span class="p">,</span> <span class="n">read</span><span class="p">,</span> <span class="n">update</span><span class="p">,</span> <span class="ow">and</span> <span class="n">delete</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h3</span><span class="o">&gt;</span><span class="n">Setting</span> <span class="n">Up</span><span class="o">&lt;/</span><span class="n">h3</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">If</span> <span class="n">you</span> <span class="n">don</span><span class="err">’</span><span class="n">t</span> <span class="n">have</span> <span class="n">Node</span> <span class="n">installed</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">a</span> <span class="n">href</span><span class="o">=</span><span class="s">&quot;https://howtonode.org/how-to-install-nodejs&quot;</span><span class="o">&gt;</span><span class="n">see</span>
+</span><span class='line'><span class="n">here</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">In</span> <span class="n">a</span> <span class="n">new</span> <span class="n">directory</span><span class="p">,</span> <span class="n">run</span> <span class="n">npm</span> <span class="n">init</span><span class="p">,</span> <span class="ow">and</span> <span class="n">follow</span> <span class="n">along</span> <span class="k">with</span> <span class="n">the</span> <span class="n">prompts</span><span class="p">,</span> <span class="n">giving</span> <span class="n">your</span>
+</span><span class='line'><span class="n">app</span> <span class="n">the</span> <span class="n">name</span> <span class="n">of</span> <span class="err">‘</span><span class="n">notable</span><span class="err">’</span> <span class="p">(</span><span class="ow">or</span> <span class="n">whatever</span> <span class="k">else</span> <span class="n">you</span> <span class="n">might</span> <span class="n">like</span><span class="p">)</span><span class="o">.</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">npm</span> <span class="n">init</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">Once</span> <span class="n">that</span><span class="err">’</span><span class="n">s</span> <span class="n">done</span><span class="p">,</span> <span class="n">you</span> <span class="n">should</span> <span class="n">have</span> <span class="n">a</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">package</span><span class="o">.</span><span class="n">json</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">ready</span> <span class="n">to</span> <span class="n">go</span> <span class="ow">in</span> <span class="n">your</span>
+</span><span class='line'><span class="n">directory</span><span class="o">.</span> <span class="n">This</span> <span class="n">means</span> <span class="n">you</span> <span class="n">can</span> <span class="n">start</span> <span class="n">installing</span> <span class="n">the</span> <span class="n">dependencies</span> <span class="n">you</span> <span class="n">need</span> <span class="k">for</span>
+</span><span class='line'><span class="n">your</span> <span class="n">project</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">You</span><span class="err">’</span><span class="n">re</span> <span class="n">going</span> <span class="n">to</span> <span class="n">use</span> <span class="n">Express</span> <span class="k">as</span> <span class="n">your</span> <span class="n">framework</span><span class="p">,</span> <span class="n">MongoDB</span> <span class="k">as</span> <span class="n">the</span> <span class="n">database</span><span class="p">,</span> <span class="ow">and</span> <span class="n">a</span>
+</span><span class='line'><span class="n">package</span> <span class="n">called</span> <span class="n">body</span><span class="o">-</span><span class="n">parser</span> <span class="n">to</span> <span class="n">help</span> <span class="n">deal</span> <span class="k">with</span> <span class="n">JSON</span> <span class="n">requests</span><span class="o">.</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">npm</span> <span class="n">install</span> <span class="o">--</span><span class="n">save</span> <span class="n">express</span> <span class="n">mongodb</span> <span class="n">body</span><span class="o">-</span><span class="n">parser</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">I</span> <span class="n">also</span> <span class="n">highly</span> <span class="n">recommend</span> <span class="n">installing</span> <span class="n">Nodemon</span> <span class="k">as</span> <span class="n">a</span> <span class="n">dev</span> <span class="n">dependency</span><span class="o">.</span> <span class="n">It</span><span class="err">’</span><span class="n">s</span> <span class="n">a</span> <span class="n">simple</span>
+</span><span class='line'><span class="n">little</span> <span class="n">package</span> <span class="n">that</span> <span class="n">automatically</span> <span class="n">restarts</span> <span class="n">your</span> <span class="n">server</span> <span class="n">when</span> <span class="n">files</span> <span class="n">change</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">If</span> <span class="n">you</span> <span class="n">run</span><span class="p">:</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">npm</span> <span class="n">install</span> <span class="o">--</span><span class="n">save</span><span class="o">-</span><span class="n">dev</span> <span class="n">nodemon</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">You</span> <span class="n">can</span> <span class="n">then</span> <span class="n">add</span> <span class="n">the</span> <span class="n">following</span> <span class="n">script</span> <span class="n">to</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">package</span><span class="o">.</span><span class="n">json</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">:</span>
+</span></code></pre></td></tr></table></div></figure> javascript
     // package.json</p>
 
 <pre><code>  "scripts": {
@@ -582,9 +1244,9 @@ Node, and MongoDB — you can use your simple app as a launching pad for more
 complex projects.</p>
 
 <p>In the future I’ll be writing tutorials to create more simple API’s in different
-languages and frameworks. Hit the follow button if you’re interested!</p>
+languages and frameworks.</p>
 
-<p>If this tutorial was any help to you, please hit the green heart below- it means
+<p>If this tutorial was any help to you, please share it with friends and colleagues- it means
 a lot. Feel free to also leave me a comment with any feedback or questions.</p>
 
 <p>Thanks for reading!</p>

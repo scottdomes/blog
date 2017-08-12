@@ -96,4 +96,13 @@
 <url>
 <loc>http://scottdomes.com/blog/categories/api/</loc>
 </url>
+<url>
+<loc>http://scottdomes.com/blog/categories/django/</loc>
+</url>
+<url>
+<loc>http://scottdomes.com/blog/categories/python/</loc>
+</url>
+<url>
+<loc>http://scottdomes.com/blog/categories/software-development/</loc>
+</url>
 </urlset>

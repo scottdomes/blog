@@ -523,9 +523,9 @@ Node, and MongoDB — you can use your simple app as a launching pad for more
 complex projects.
 
 In the future I’ll be writing tutorials to create more simple API’s in different
-languages and frameworks. Hit the follow button if you’re interested!
+languages and frameworks.
 
-If this tutorial was any help to you, please hit the green heart below- it means
+If this tutorial was any help to you, please share it with friends and colleagues- it means
 a lot. Feel free to also leave me a comment with any feedback or questions.
 
 Thanks for reading!
