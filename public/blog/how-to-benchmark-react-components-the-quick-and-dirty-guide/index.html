@@ -1,0 +1,439 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+
+<head>
+
+
+<meta charset="utf-8">
+<meta http-equiv="cleartype" content="on">
+
+<title>How to Benchmark React Components: The Quick and Dirty Guide - Scott Domes | Web Developer</title>
+<meta name="author" content="Scott Domes">
+
+
+
+
+<meta name="description" content="Tutorials to make you a better dev">
+
+<meta name="keywords" content="react javascript web development web performance es6 ">
+
+
+<!-- http://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Twitter Cards -->
+
+  
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:image" content"">
+  
+  <meta name="twitter:title" content="How to Benchmark React Components: The Quick and Dirty Guide">
+  <meta name="twitter:description" content="Tutorials to make you a better dev">
+  <meta name="twitter:creator" content="@scottdomes">
+
+
+<!-- Open Graph -->
+<meta property="og:local" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:url" content="http://scottdomes.com/blog/how-to-benchmark-react-components-the-quick-and-dirty-guide">
+<meta property="og:title" content="How to Benchmark React Components: The Quick and Dirty Guide">
+<meta property="og:description" content="Tutorials to make you a better dev">
+
+  <meta property="og:image" content="">
+
+<meta property="og:site_name" content="Scott Domes | Web Developer">
+
+<link rel="canonical" href="http://scottdomes.com/blog/how-to-benchmark-react-components-the-quick-and-dirty-guide">
+<link href="/favicon.png" rel="icon">
+<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="/atom.xml" rel="alternate" title="Scott Domes | Web Developer" type="application/atom+xml">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+<script>Modernizr || document.write('<script src="/javascripts/vendor/modernizr-2.6.2.custom.min.js"><\/script>') </script>
+
+
+
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+
+</head>
+
+<body id="post" >
+
+<!--[if lt IE 9]><div class="upgrade"><strong><a href="http://whatbrowser.org/">Your browser is quite old!</strong> Why not upgrade to a different browser to better enjoy this site?</a></div><![endif]-->
+<nav id="dl-menu" class="dl-menuwrapper" role="navigation">
+	<button class="dl-trigger">Open Menu</button>
+	<ul class="dl-menu">
+		<li><a href="/">Home</a></li>
+		<li>
+			<a href="#">About</a>
+			<ul class="dl-submenu">
+				<li>
+					<img src="" alt="Scott Domes photo" class="author-photo">
+					<h4>Scott Domes</h4>
+					<p>Mobile/Front-End Developer @ MuseFind. I write web development tutorials to help you be a better dev. Curator of the Progressive Web App Newsletter.</p>
+				</li>
+				
+				
+				<li>
+					<a href="https://twitter.com/scottdomes"><i class="fa fa-twitter"></i> Twitter</a>
+				</li>
+				
+				<li>
+					<a href="https://github.com/scottdomes"><i class="fa fa-github"></i> GitHub</a>
+				</li>
+				
+			</ul><!-- /.dl-submenu -->
+		</li>
+		<li>
+			<a href="#">Posts</a>
+			<ul class="dl-submenu">
+				<li><a href="/posts/">All Posts</a></li>
+				<li><a href="/categories/">All Categories</a></li>
+			</ul>
+		</li>
+		
+	</ul><!-- /.dl-menu -->
+</nav><!-- /.dl-menuwrapper -->
+
+
+
+
+<div id="main" role="main">
+  <article class="hentry">
+    <header class="header-title">
+      <div class="header-title-wrap">
+        
+          <h1 class="entry-title"><a href="/blog/how-to-benchmark-react-components-the-quick-and-dirty-guide/" rel="bookmark" title="How to Benchmark React Components: The Quick and Dirty Guide">How to Benchmark React Components: The Quick and Dirty Guide</a></h1>
+        
+        <h2>August 11, 2017</h2>
+      </div><!-- /.header-title-wrap -->
+    </header>
+    <div class="entry-content">
+      <p>A React Component works hard. As the user manipulates the state of the
+application, it may re-render 5, 10, 100 times. Sometimes, that’s a good thing.
+But if you don’t understand what is causing the re-renders, and whether they are
+necessary, your app could suffer serious slowdown.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*VDZqVFTK09inhHpjKJpXpw.png" alt="" /></p>
+
+<!--more-->
+
+
+<h3>A Tale of Two Tables</h3>
+
+<p>A few months after I started at MuseFind, we embarked on a rewrite of our
+internal software. The key piece in this application was a table that allowed
+our customer success team toquickly edit, add, and manage collaborations across
+all influencer marketing campaigns on our platform.</p>
+
+<p>The purpose of this rewrite was to improve our team’s efficiency — speed was the
+name of the game. But as the table grew in complexity (more and more
+subcomponents for each row, with inputs and date inputs and buttons), it became
+more and more slow. Slow to update, slow to reload — just a pain to use.</p>
+
+<p>The solution was to carefully measure the render time of the subcomponents and
+of the table as a whole, and then begin experimenting. Over time, we managed to
+cut the table render time to a third of what it was.</p>
+
+<p>In this article I’ll take you on a quick tour of React’s performance tools, and
+how to eliminate wasted renders.</p>
+
+<p>Let’s get started.</p>
+
+<h3>How To Benchmark A React Component</h3>
+
+<p>We’ll use a simple example: an app that renders a list of 10,000 numbers.</p>
+
+<p>Half the numbers in the list — 1 to 5,000- are simply generated by incrementing.
+The other half, in a separate array, are generated by incrementing and then
+multiplying by a number stored in the app’s state.</p>
+
+<p>So if the <em>this.state.multiplier</em> is 2, the second array would be 2, 4, 6 … etc
+up to 10,000.</p>
+
+<p>To change the multiplier from the default of 1, we click a button.</p>
+
+<div><script src='https://gist.github.com/e282df91443f92dc24345c136fd5e225.js'></script>
+<noscript><pre><code>import React, { Component } from &#39;react&#39;
+import &#39;./App.css&#39;
+import ListItem from &#39;./ListItem&#39;
+
+function arrayGenerator(length) {
+  return Array.apply(null, { length: length }).map(Number.call, Number)
+}
+
+class App extends Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      multiplier: 1
+    }
+  }
+  
+  resetMultiplier() {
+    this.setState({ multiplier: 2 })
+  }
+
+  render() {
+    return (
+      &lt;div className=&quot;App&quot;&gt;
+        &lt;button onClick={this.resetMultiplier.bind(this)}&gt;Click Me&lt;/button&gt;
+        &lt;ul&gt;
+          {
+            arrayGenerator(5000).map(i =&gt; {
+              return &lt;ListItem key={i} text={i}/&gt;
+            })
+          }
+          {
+            arrayGenerator(5000).map(i =&gt; {
+              return &lt;ListItem key={i} text={i + this.state.multiplier}/&gt;
+            })
+          }
+        &lt;/ul&gt;
+      &lt;/div&gt;
+    );
+  }
+}
+
+export default App
+</code></pre></noscript></div>
+
+
+<p>When clicking the button, only the second array of ListItems should re-render —
+only they are affected by the change. Yet we’re experiencing slowness, so we
+want to investigate whether everything is as it should be.</p>
+
+<h3>Measuring Update Time</h3>
+
+<p>We’ll start by installing React’s performance tools.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>npm install --save-dev react-addons-perf</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And then we can import it in our App.js:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">Perf</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-perf&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There are four Perf functions that we care about:</p>
+
+<ul>
+<li>Perf.start(): start measuring performance.</li>
+<li>Perf.stop()</li>
+<li>Perf.printExclusive(): prints total rendering time for components.</li>
+<li>Perf.printWasted(): prints wasted renders- we’ll get to this shortly.</li>
+</ul>
+
+
+<p>We want to start measuring render time before our component starts updating-
+before we call <em>setState()</em>. Then we can stop the measurement and print the
+results using the lifecycle method <em>componentDidUpdate()</em>.</p>
+
+<div><script src='https://gist.github.com/1d699da138bd651f1993127cc8028b70.js'></script>
+<noscript><pre><code>  componentDidUpdate() {
+    Perf.stop()
+    Perf.printInclusive()
+    Perf.printWasted()
+  }
+
+  resetMultiplier() {
+    Perf.start()
+    this.setState({ multiplier: 2 })
+  }</code></pre></noscript></div>
+
+
+<p>Here’s what our console will look like after clicking the button:</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*SxJEEnK8C4sJTdIAnzvmVg.png" alt="" /></p>
+
+<p>Our App renders took 94.75ms to render, and rendered only once.</p>
+
+<p>Our ListItem component took 53.84ms, and rendered 10,000 times (this is
+including all instances of the components, not individual render time).</p>
+
+<p>In the second table, we can see ‘wasted’ time — when the component re-rendered
+but nothing had actually changed.</p>
+
+<p>We have 5,000 wasted ListItem renders. Not good.</p>
+
+<p>These renders are ‘wasted’ in the sense that only the ListItems affected by the
+multiplier will have their render actually changed when we click the button.
+There’s no point in having them re-render.</p>
+
+<h3>Fixing Wasted Renders</h3>
+
+<p>Fortunately, React furnishes us with a handy lifecycle method called
+<em>shouldComponentUpdate()</em> for these types of situations.</p>
+
+<p>It gives us fine-grained control of when our component will re-render.</p>
+
+<p>We can check for certain conditions, returning a boolean that React uses to
+determine whether it will call <em>render()</em> on the component, or leave it as is.</p>
+
+<p>Here’s what it would look like for ListItem:</p>
+
+<div><script src='https://gist.github.com/35e739f94d338031acea59c04de42fbd.js'></script>
+<noscript><pre><code>import React, { Component } from &#39;react&#39;
+
+export default class ListItem extends Component {
+  shouldComponentUpdate(nextProps, nextState) {
+    return nextProps.text !== this.props.text  
+  }
+
+  render() {
+    let { text } = this.props
+    return &lt;li&gt;{text}&lt;/li&gt;
+  }
+}</code></pre></noscript></div>
+
+
+<p>If the text prop hasn’t changed, there’s no reason to change the component’s
+appearance via a re-render.</p>
+
+<p><em>Note that we don’t use the nextState argument in shouldComponentUpdate()- I
+left it there for reference.</em></p>
+
+<p>Now let’s re-run our Perf.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*45uzx4SZL67IgaWNGmIM1A.png" alt="" /></p>
+
+<p>We’ve cut our total render time down by 30ms, and eliminated all wasteful
+renders.</p>
+
+<h3>Using Perf in the Real World</h3>
+
+<p>Most of the components you’ll be benchmarking won’t be nearly this simple. But
+the Perf tools are a valuable way to identify which components are problems.</p>
+
+<p>Here’s an example of <em>Perf.printWasted()</em> from MuseFind’s administrative table
+component:</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*2Drc_MtkAZexMuuXhBb4Vw.png" alt="" /></p>
+
+<p>These wasted times aren’t long at all, thankfully — but you can see that of the
+wasteful renders, the Header component is the main problem, with its
+subcomponents Toolbar and PopoverMenu accounting for almost all of the wasted
+render time.</p>
+
+<p>Those two components are prime candidates for adding <em>shouldComponentUpdate()</em>.</p>
+
+<h3>Bonus: Benchmarking Initial Renders</h3>
+
+<p>Sometimes you want to not just benchmark when the component updates, but also
+how long it takes to render completely the first time around.</p>
+
+<p>In short, we want to measure the time between <em>componentWillMount() </em>and
+<em>componentDidMount().</em></p>
+
+<p><em>Perf.start()</em> can’t be placed in the <em>componentWillMount(), </em>however, so we’ll
+have to be a little more manual.</p>
+
+<div><script src='https://gist.github.com/4f4889a9c600ce31d6f48e2304d5f033.js'></script>
+<noscript><pre><code>  componentWillMount() {
+    window.performance.mark(&#39;App&#39;)
+  }
+
+  componentDidMount() {
+    console.log(window.performance.now(&#39;App&#39;))
+  }</code></pre></noscript></div>
+
+
+<p>This will give you a logged out time in milliseconds- not as fancy as Perf, but
+a useful metric for how long it takes to boot up your app.</p>
+
+<h3>Final Notes</h3>
+
+<p>As the docs page <a href="https://facebook.github.io/react/docs/perf.html">proudly
+proclaims</a>, React is fast as it
+is.</p>
+
+<p>However, that doesn’t mean it’s free from performance slowdowns caused by
+unnecessary re-renders — especially in complex apps with hundreds of children.</p>
+
+<p>Using Perf on high-level components can give you an idea of which children are
+the problem, so you can keep your app quick and snappy.</p>
+
+<p>I hope this article has been useful — if it has, let me know by hitting the
+green heart below.</p>
+
+<p>If you have any questions or feedback, let me know in the comments — thanks for
+reading.</p>
+
+<p><a href="http://pwa-newsletter.com/">http://pwa-newsletter.com/</a></p>
+
+<p>Want to stay up to date/learn best practices for the future of web development?
+Say hello to Progressive Web App Newsletter — subscribe through the above link.</p>
+
+      <footer class="entry-meta">
+        <span class="entry-tags"><a href="/categories/#react" title="Pages tagged react" class="tag">react</a><a href="/categories/#javascript" title="Pages tagged javascript" class="tag">javascript</a><a href="/categories/#web development" title="Pages tagged web development" class="tag">web development</a><a href="/categories/#web performance" title="Pages tagged web performance" class="tag">web performance</a><a href="/categories/#es6" title="Pages tagged es6" class="tag">es6</a></span>
+        <span><a href="/blog/how-to-benchmark-react-components-the-quick-and-dirty-guide/" rel="bookmark" title="How to Benchmark React Components: The Quick and Dirty Guide">How to Benchmark React Components: The Quick and Dirty Guide</a> was published on <span class="entry-date date published updated"><time datetime="2017-08-11T16:50:37-07:00">August 11, 2017</time></span></span>
+        
+        <span class="author vcard"><span class="fn"><a href="" title="About Scott Domes">Scott Domes</a></span></span>
+        
+      </footer>
+    </div><!-- /.entry-content -->
+    
+      <div class="read-more">
+        
+          <div class="read-more-header">
+            <a href="/blog/make-your-rails-app-real-time-in-under-ten-minutes/" class="btn">Read More</a>
+          </div><!-- /.read-more-header -->
+          <div class="read-more-content">
+            <h3><a href="/blog/make-your-rails-app-real-time-in-under-ten-minutes/" title="Make your Rails app real-time—in under ten minutes">Make your Rails app real-time—in under ten minutes</a></h3>
+            <p>&hellip; <a href="/blog/make-your-rails-app-real-time-in-under-ten-minutes/"> Continue reading</a></p>
+          </div><!-- /.read-more-content -->
+        
+        <div class="read-more-list">
+          
+            <div class="list-item">
+              <h4><a href="/blog/five-es6-features-to-make-your-life-easier/" title="Five ES6 features to make your life easier">Five ES6 features to make your life easier</a></h4>
+              <span>Published on August 11, 2017</span>
+            </div><!-- /.list-item -->
+          
+            <div class="list-item">
+              <h4><a href="/blog/build-your-first-progressive-web-app-with-react/" title="Build your first progressive web app with React">Build your first progressive web app with React</a></h4>
+              <span>Published on August 11, 2017</span>
+            </div><!-- /.list-item -->
+          
+        </div><!-- /.read-more-list -->
+      </div><!-- /.read-more -->
+    
+    
+  </article>
+</div><!-- /#main -->
+
+<div class="footer-wrapper">
+  <footer role="contentinfo">
+    <span>&copy; 2017 Scott Domes. Powered by <a href="http://octopress.org">Octopress</a> using the <a href="https://github.com/jez/hpstr-theme/">HPSTR Theme for Octopress</a>.</span>
+
+  </footer>
+</div><!-- /.footer-wrapper -->
+
+
+	        
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="/javascripts/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+<script src="/javascripts/octopress.js" type="text/javascript"></script>
+<script src="/javascripts/scripts.min.js"></script>
+
+
+
+
+
+
+	        
+
+</body>
+</html>
