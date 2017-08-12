@@ -4,7 +4,7 @@
   <title><![CDATA[Scott Domes | Web Developer]]></title>
   <link href="http://scottdomes.com/atom.xml" rel="self"/>
   <link href="http://scottdomes.com/"/>
-  <updated>2017-08-11T17:34:29-07:00</updated>
+  <updated>2017-08-11T17:43:33-07:00</updated>
   <id>http://scottdomes.com/</id>
   <author>
     <name><![CDATA[Scott Domes]]></name>
@@ -81,7 +81,693 @@
     <link href="http://scottdomes.com/blog/our-best-practices-for-writing-react-components/"/>
     <updated>2017-08-11T16:51:15-07:00</updated>
     <id>http://scottdomes.com/blog/our-best-practices-for-writing-react-components</id>
-    <content type="html"><![CDATA[
+    <content type="html"><![CDATA[<p>When I first started writing React, I remember seeing many different
+approaches to writing components, varying greatly from tutorial to tutorial.
+Though the framework has matured considerably since then, there doesn’t seem to
+yet be a firm ‘right’ way of doing things.</p>
+
+<p>Over the past year at <a href="https://musefind.com/">MuseFind</a>, our team has written a
+lot of React components. We’ve gradually refined our approach until we’re happy
+with it.</p>
+
+<p>This guide represents our suggested best practices. We hope it will be useful,
+whether you’re a beginner or experienced.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*GEniDHmmO0nkVuKQ8fhLYw.png" alt="" /></p>
+
+<!--more-->
+
+
+<p>Before we get started, a couple of notes:</p>
+
+<ul>
+<li>We use ES6 and ES7 syntax.</li>
+<li>If you’re not sure of the distinction between presentational and container
+components, we recommend you <a href="https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0#.kuvqndiqq">read this
+first</a>.</li>
+<li>Please let us know in the comments if you have any suggestions, questions, or
+feedback.</li>
+</ul>
+
+
+<h3>Class Based Components</h3>
+
+<p>Class based components are stateful and/or contain methods. We try to use them
+as sparingly as possible, but they have their place.</p>
+
+<p>Let’s incrementally build our component, line by line.</p>
+
+<h4>Importing CSS</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">React</span><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">observer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;mobx-react&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="nx">ExpandableForm</span> <span class="nx">from</span> <span class="s1">&#39;./ExpandableForm&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="s1">&#39;./styles/ProfileContainer.css&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I like <a href="https://medium.freecodecamp.com/a-5-minute-intro-to-styled-components-41f40eb7cd55">CSS in
+JavaScript</a>,
+I do — in theory. But it’s still a new idea, and a mature solution hasn’t
+emerged. Until then, we import a CSS file to each component.</p>
+
+<p>We also separate our dependency imports from local imports by a newline.</p>
+
+<h4>Initializing State</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span>
+</span><span class='line'><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">observer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;mobx-react&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="nx">ExpandableForm</span> <span class="nx">from</span> <span class="s1">&#39;./ExpandableForm&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="s1">&#39;./styles/ProfileContainer.css&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You can also use the older approach of initializing state in the constructor.
+More on that
+<a href="http://stackoverflow.com/questions/35662932/react-constructor-es6-vs-es7">here</a>.
+We prefer the cleaner way.</p>
+
+<p>We also make sure to export our class as the default.</p>
+
+<h4>propTypes and defaultProps</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">React</span><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">observer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;mobx-react&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="nx">ExpandableForm</span> <span class="nx">from</span> <span class="s1">&#39;./ExpandableForm&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="s1">&#39;./styles/ProfileContainer.css&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">export</span> <span class="k">default</span> <span class="kr">class</span> <span class="nx">ProfileContainer</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">state</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">expanded</span><span class="o">:</span> <span class="kc">false</span> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>propTypes and defaultProps are static properties, declared as high as possible
+within the component code.They should be immediately visible to other devs
+reading the file, since they serve as documentation.</p>
+
+<p>If using React 15.3.0 or higher, use the
+<a href="https://github.com/reactjs/prop-types">prop-types</a> package instead of
+React.PropTypes — nicely destructured, of course.</p>
+
+<p>All your components should have propTypes.</p>
+
+<h4>Methods</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">React</span><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">observer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;mobx-react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">string</span><span class="p">,</span> <span class="nx">object</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;prop-types&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="nx">ExpandableForm</span> <span class="nx">from</span> <span class="s1">&#39;./ExpandableForm&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="s1">&#39;./styles/ProfileContainer.css&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">export</span> <span class="k">default</span> <span class="kr">class</span> <span class="nx">ProfileContainer</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">state</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">expanded</span><span class="o">:</span> <span class="kc">false</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kr">static</span> <span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">model</span><span class="o">:</span> <span class="nx">object</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="nx">string</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kr">static</span> <span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">model</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">id</span><span class="o">:</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="p">},</span>
+</span><span class='line'>  <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>With class components, when you pass methods to subcomponents, you have to
+ensure that they have the right <em>this** </em>when they’re called.This is usually
+achieved by passing <em>this.handleSubmit.bind(this)</em> to the subcomponent.</p>
+
+<p>We think this approach is cleaner and easier, maintaining the correct context
+automatically via the ES6 arrowfunction.</p>
+
+<h4><strong>Passing setState a Function</strong></h4>
+
+<p>In the above example, we do this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span> <span class="nx">expanded</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">expanded</span> <span class="p">})</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here’s the dirty secret about setState — it’s actually asynchronous. React
+batches state changes for performance reasons, so the state may not change
+immediately after setState is called.</p>
+
+<p>That means you should not rely on the current state when calling setState —
+since you can’t be sure what that state will be!</p>
+
+<p>Here’s the solution — pass a function to setState, with the previous state as an
+argument.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">prevState</span> <span class="o">=&gt;</span> <span class="p">({</span> <span class="nx">expanded</span><span class="o">:</span> <span class="o">!</span><span class="nx">prevState</span><span class="p">.</span><span class="nx">expanded</span> <span class="p">}))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>(Thanks to <a href="https://medium.com/@indiesquidge">Austin Wood</a> for his help with
+this section).</p>
+
+<h4>Destructuring Props</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">React</span><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">observer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;mobx-react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">string</span><span class="p">,</span> <span class="nx">object</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;prop-types&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="nx">ExpandableForm</span> <span class="nx">from</span> <span class="s1">&#39;./ExpandableForm&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="s1">&#39;./styles/ProfileContainer.css&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">export</span> <span class="k">default</span> <span class="kr">class</span> <span class="nx">ProfileContainer</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">state</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">expanded</span><span class="o">:</span> <span class="kc">false</span> <span class="p">}</span>
+</span><span class='line'> <span class="kr">static</span> <span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">model</span><span class="o">:</span> <span class="nx">object</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="nx">string</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kr">static</span> <span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">model</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">id</span><span class="o">:</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="p">},</span>
+</span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Your Name&#39;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">model</span><span class="p">.</span><span class="nx">save</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">handleNameChange</span> <span class="o">=</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">model</span><span class="p">.</span><span class="nx">changeName</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">handleExpand</span> <span class="o">=</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">prevState</span> <span class="o">=&gt;</span> <span class="p">({</span> <span class="nx">expanded</span><span class="o">:</span> <span class="o">!</span><span class="nx">prevState</span><span class="p">.</span><span class="nx">expanded</span> <span class="p">}))</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Components with many props should have each prop on a newline, like above.</p>
+
+<h4>Decorators</h4>
+
+<pre><code>export default class ProfileContainer extends Component {
+</code></pre>
+
+<p>If you’re using something like <a href="https://github.com/mobxjs/mobx">mobx</a>, you can
+decorate your class components like so — which is the same as passing the
+component into a function.</p>
+
+<p><a href="http://javascript.info/tutorial/decorators">Decorators</a> are flexible and
+readable way of modifying component functionality.We use them extensively, with
+mobx and our own <a href="https://github.com/musefind/mobx-models">mobx-models</a> library.</p>
+
+<p>If you don’t want to use decorators, do the following:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">class</span> <span class="nx">ProfileContainer</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// Component code</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">export</span> <span class="k">default</span> <span class="nx">observer</span><span class="p">(</span><span class="nx">ProfileContainer</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Closures</h4>
+
+<p>Avoid passing new closures to subcomponents, like so:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>          <span class="nt">&lt;input</span>
+</span><span class='line'>            <span class="na">type=</span><span class="s">&quot;text&quot;</span>
+</span><span class='line'>            <span class="na">value=</span><span class="s">{model.name}</span>
+</span><span class='line'>            <span class="err">//</span> <span class="na">onChange=</span><span class="s">{(e)</span> <span class="err">=</span><span class="nt">&gt;</span> { model.name = e.target.value }}
+</span><span class='line'>            //
+</span><span class='line'>
+</span><span class='line'>            placeholder=&quot;Your Name&quot;/&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here’s why: every time the parent component renders, a new function is created
+and passed tothe input.</p>
+
+<p>If the input were a React component, this would automatically trigger it to
+re-render, regardless of whether its other props have actually changed.</p>
+
+<p>Reconciliation is the most expensivepart of React. Don’t make it harder than it
+needs to be! Plus, passing aclass method is easier to read, debug, and change.</p>
+
+<p>Here’s our full component:</p>
+
+<div><script src='https://gist.github.com/70e436951dfeeb82dfdd4aa6d2541dce.js'></script>
+<noscript><pre><code>import React, { Component } from &#39;react&#39;
+import { observer } from &#39;mobx-react&#39;
+import { string, object } from &#39;prop-types&#39;
+// Separate local imports from dependencies
+import ExpandableForm from &#39;./ExpandableForm&#39;
+import &#39;./styles/ProfileContainer.css&#39;
+
+// Use decorators if needed
+@observer
+export default class ProfileContainer extends Component {
+  state = { expanded: false }
+  // Initialize state here (ES7) or in a constructor method (ES6)
+ 
+  // Declare propTypes as static properties as early as possible
+  static propTypes = {
+    model: object.isRequired,
+    title: string
+  }
+
+  // Default props below propTypes
+  static defaultProps = {
+    model: {
+      id: 0
+    },
+    title: &#39;Your Name&#39;
+  }
+
+  // Use fat arrow functions for methods to preserve context (this will thus be the component instance)
+  handleSubmit = (e) =&gt; {
+    e.preventDefault()
+    this.props.model.save()
+  }
+  
+  handleNameChange = (e) =&gt; {
+    this.props.model.name = e.target.value
+  }
+  
+  handleExpand = (e) =&gt; {
+    e.preventDefault()
+    this.setState(prevState =&gt; ({ expanded: !prevState.expanded }))
+  }
+  
+  render() {
+    // Destructure props for readability
+    const {
+      model,
+      title
+    } = this.props
+    return ( 
+      &lt;ExpandableForm 
+        onSubmit={this.handleSubmit} 
+        expanded={this.state.expanded} 
+        onExpand={this.handleExpand}&gt;
+        // Newline props if there are more than two
+        &lt;div&gt;
+          &lt;h1&gt;{title}&lt;/h1&gt;
+          &lt;input
+            type=&quot;text&quot;
+            value={model.name}
+            // onChange={(e) =&gt; { model.name = e.target.value }}
+            // Avoid creating new closures in the render method- use methods like below
+            onChange={this.handleNameChange}
+            placeholder=&quot;Your Name&quot;/&gt;
+        &lt;/div&gt;
+      &lt;/ExpandableForm&gt;
+    )
+  }
+}</code></pre></noscript></div>
+
+
+<h3>Functional Components</h3>
+
+<p>These components have no state and no methods.They’re pure, and easy to reason
+about. Use them as often as possible.</p>
+
+<h4>propTypes</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">observer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;mobx-react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">func</span><span class="p">,</span> <span class="nx">bool</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;prop-types&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="s1">&#39;./styles/Form.css&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">ExpandableForm</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">onSubmit</span><span class="o">:</span> <span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">expanded</span><span class="o">:</span> <span class="nx">bool</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Component declaration</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, we assign the propTypes before the component declaration, so they are
+immediately visible. We’re able to do this because of JavaScript function
+hoisting.</p>
+
+<h4>Destructuring Props and defaultProps</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">observer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;mobx-react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">func</span><span class="p">,</span> <span class="nx">bool</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;prop-types&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="s1">&#39;./styles/Form.css&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">ExpandableForm</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">onSubmit</span><span class="o">:</span> <span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">expanded</span><span class="o">:</span> <span class="nx">bool</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">onExpand</span><span class="o">:</span> <span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Our component is a function, which takes its props as its argument. We can
+expand them like so:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">observer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;mobx-react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">func</span><span class="p">,</span> <span class="nx">bool</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;prop-types&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="s1">&#39;./styles/Form.css&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">ExpandableForm</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">onSubmit</span><span class="o">:</span> <span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">expanded</span><span class="o">:</span> <span class="nx">bool</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">onExpand</span><span class="o">:</span> <span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">formStyle</span> <span class="o">=</span> <span class="nx">expanded</span> <span class="o">?</span> <span class="p">{</span><span class="nx">height</span><span class="o">:</span> <span class="s1">&#39;auto&#39;</span><span class="p">}</span> <span class="o">:</span> <span class="p">{</span><span class="nx">height</span><span class="o">:</span> <span class="mi">0</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="p">(</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">formStyle</span><span class="p">}</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="nx">onSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class='line'>      <span class="p">{</span><span class="nx">children</span><span class="p">}</span>
+</span><span class='line'>      <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">onExpand</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Expand</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="err">/form&gt;</span>
+</span><span class='line'>  <span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note we can also use default arguments to act as defaultProps in a highly
+readable manner. If expanded is undefined, we set it to false. (A bit of a
+forced example, since it’s a boolean, but very useful for avoiding ‘Cannot read
+<property> of undefined’ errors with objects).</p>
+
+<p>Avoid the following ES6 syntax:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">const</span> <span class="nx">ExpandableForm</span> <span class="o">=</span> <span class="p">({</span> <span class="nx">onExpand</span><span class="p">,</span> <span class="nx">expanded</span><span class="p">,</span> <span class="nx">children</span> <span class="p">})</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Looks very modern, but the function here is actually unnamed.</p>
+
+<p>This lack of name will not be a problem if your Babel is set up correctly — but
+if it’s not, any errors will show up as occurring in &lt;<anonymous>> which is
+terrible for debugging.</p>
+
+<p>Unnamed functions can also cause problems with Jest, a React testing library.
+Due to the potential for difficult-to-understand bugs (and the lack of real
+benefit) we recommend using <em>function </em>instead of<em> const.</em></p>
+
+<h4>Wrapping</h4>
+
+<p>Since you can’t use decorators with functional components, you simply pass it
+the function in as an argument:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">observer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;mobx-react&#39;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">func</span><span class="p">,</span> <span class="nx">bool</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;prop-types&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="s1">&#39;./styles/Form.css&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">ExpandableForm</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">onSubmit</span><span class="o">:</span> <span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">expanded</span><span class="o">:</span> <span class="nx">bool</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">onExpand</span><span class="o">:</span> <span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">ExpandableForm</span><span class="p">({</span> <span class="nx">onExpand</span><span class="p">,</span> <span class="nx">expanded</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">children</span><span class="p">,</span> <span class="nx">onSubmit</span> <span class="p">})</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">formStyle</span> <span class="o">=</span> <span class="nx">expanded</span> <span class="o">?</span> <span class="p">{</span><span class="nx">height</span><span class="o">:</span> <span class="s1">&#39;auto&#39;</span><span class="p">}</span> <span class="o">:</span> <span class="p">{</span><span class="nx">height</span><span class="o">:</span> <span class="mi">0</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="p">(</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">formStyle</span><span class="p">}</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="nx">onSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class='line'>      <span class="p">{</span><span class="nx">children</span><span class="p">}</span>
+</span><span class='line'>      <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">onExpand</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Expand</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="err">/form&gt;</span>
+</span><span class='line'>  <span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here’s our full component:</p>
+
+<div><script src='https://gist.github.com/19d4ade69b1a3978730b104558fb5308.js'></script>
+<noscript><pre><code>import React from &#39;react&#39;
+import { observer } from &#39;mobx-react&#39;
+import { func, bool } from &#39;prop-types&#39;
+// Separate local imports from dependencies
+import &#39;./styles/Form.css&#39;
+
+// Declare propTypes here, before the component (taking advantage of JS function hoisting)
+// You want these to be as visible as possible
+ExpandableForm.propTypes = {
+  onSubmit: func.isRequired,
+  expanded: bool,
+  onExpand: func.isRequired
+}
+
+// Destructure props like so, and use default arguments as a way of setting defaultProps
+function ExpandableForm({ onExpand, expanded = false, children, onSubmit }) {
+  const formStyle = expanded ? { height: &#39;auto&#39; } : { height: 0 }
+  return (
+    &lt;form style={formStyle} onSubmit={onSubmit}&gt;
+      {children}
+      &lt;button onClick={onExpand}&gt;Expand&lt;/button&gt;
+    &lt;/form&gt;
+  )
+}
+
+// Wrap the component instead of decorating it
+export default observer(ExpandableForm)</code></pre></noscript></div>
+
+
+<h3>Conditionals in JSX</h3>
+
+<p>Chances are you’re going to do a lot of conditional rendering. Here’s what you
+want to avoid:</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*4zdSbYcOXTVchgSJqtk0Ig.png" alt="" />
+^ Actual code I wrote in my early days at MuseFind… forgive me</p>
+
+<p>No,nested ternaries are not a good idea.</p>
+
+<p>There are some libraries that solve this problem (<a href="https://github.com/AlexGilleran/jsx-control-statements">JSX-Control
+Statements</a>), but rather
+than introduce another dependency, we settled on this approach for complex
+conditions:</p>
+
+<p>A refactored version of the above:
+<img src="https://cdn-images-1.medium.com/max/800/1*IVFlMaSGKqHISJueTC26sw.png" alt="" /></p>
+
+<p>Use curly braces wrapping an
+<a href="http://stackoverflow.com/questions/8228281/what-is-the-function-construct-in-javascript">IIFE</a>,
+and then put your if statements inside, returning whatever you want to render.
+Note that IIFE’s like this can cause a performance hit, but in most cases it
+will not be significant enough to warrant losing the readability factor.</p>
+
+<p><strong>Update: </strong>Many commenters have recommended extracting this logic to a
+subcomponent that conditionally returns different buttons based on props.They’re
+right — splitting up your components as much as possible is always a good call.
+But keep the IIFE approach in mind as a fallback for quick conditionals.</p>
+
+<p>Also, when you only want to render an element on one condition, instead of doing
+this…</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nx">isTrue</span>
+</span><span class='line'>   <span class="o">?</span> <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">True</span><span class="o">!&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'>   <span class="o">:</span> <span class="o">&lt;</span><span class="nx">none</span><span class="o">/&gt;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>… use short-circuit evaluation:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nx">isTrue</span> <span class="o">&amp;&amp;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">True</span><span class="o">!&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Conclusion</h3>
+
+<p>Was this article useful? Share it with your friends and fellow devs.</p>
+
+<p>Have any feedback? Leave a comment below.</p>
+
+<p>Thanks for reading!</p>
+
+<p>(Want to stay up to date/learn best practices for the future of web development?
+Say hello to Progressive Web App Newsletter—subscribe below.)</p>
+
+<p><a href="http://pwa-newsletter.com/">http://pwa-newsletter.com/</a></p>
 ]]></content>
   </entry>
   
