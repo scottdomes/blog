@@ -18,7 +18,7 @@
 
 <meta name="description" content="Tutorials to make you a better dev">
 
-<meta name="keywords" content=" ">
+<meta name="keywords" content="nodejs javascript web development programming api ">
 
 
 <!-- http://t.co/dKP3o1e -->
@@ -118,10 +118,802 @@
       </div><!-- /.header-title-wrap -->
     </header>
     <div class="entry-content">
-      
+      <p>Node.js can be intimidating to beginners. But its flexible structure and lack of
+strict guidelines makes it seem more complicated than it is.</p>
+
+<p>This tutorial is a quick and simple guide to Node.js, the Express framework, and
+MongoDB, focusing on the fundamental REST routes and basic database interaction.
+You’ll build a simple API boilerplate that can then be used as the foundation
+for any app.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*s5LVdcugM62xzSvGUpTLWA.png" alt="" /></p>
+
+<!--more-->
+
+
+<p><strong>Who This Tutorial Is For</strong>: You should have a basic understanding of REST APIs
+and CRUD operations, plus basic JavaScript knowledge. I use ES6 (mainly
+fat-arrow functions), but nothing too complex.</p>
+
+<p>For this tutorial, you’ll create the skeleton of a back-end for a note-taking
+application — think <a href="http://keep.google.com/">Google Keep</a>. You want to be able
+to do all four CRUD actions on your notes: create, read, update, and delete.</p>
+
+<h3>Setting Up</h3>
+
+<p>If you don’t have Node installed, <a href="https://howtonode.org/how-to-install-nodejs">see
+here</a>.</p>
+
+<p>In a new directory, run npm init, and follow along with the prompts, giving your
+app the name of ‘notable’ (or whatever else you might like).</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>npm init</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Once that’s done, you should have a <em>package.json </em>ready to go in your
+directory. This means you can start installing the dependencies you need for
+your project.</p>
+
+<p>You’re going to use Express as your framework, MongoDB as the database, and a
+package called body-parser to help deal with JSON requests.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>npm install --save express mongodb body-parser</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I also highly recommend installing Nodemon as a dev dependency. It’s a simple
+little package that automatically restarts your server when files change.</p>
+
+<p>If you run:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>npm install --save-dev nodemon</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You can then add the following script to <em>package.json</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// package.json</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s2">&quot;scripts&quot;</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="s2">&quot;dev&quot;</span><span class="o">:</span> <span class="s2">&quot;nodemon server.js&quot;</span>
+</span><span class='line'>  <span class="p">},</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Your complete <em>package.json</em> should look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// package.json</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="s2">&quot;name&quot;</span><span class="o">:</span> <span class="s2">&quot;notable&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="s2">&quot;version&quot;</span><span class="o">:</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="s2">&quot;description&quot;</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="s2">&quot;main&quot;</span><span class="o">:</span> <span class="s2">&quot;server.js&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="s2">&quot;scripts&quot;</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="s2">&quot;dev&quot;</span><span class="o">:</span> <span class="s2">&quot;nodemon server.js&quot;</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>  <span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="s2">&quot;license&quot;</span><span class="o">:</span> <span class="s2">&quot;ISC&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="s2">&quot;dependencies&quot;</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="s2">&quot;body-parser&quot;</span><span class="o">:</span> <span class="s2">&quot;^1.15.2&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;express&quot;</span><span class="o">:</span> <span class="s2">&quot;^4.14.0&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;mongodb&quot;</span><span class="o">:</span> <span class="s2">&quot;^2.2.16&quot;</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>  <span class="s2">&quot;devDependencies&quot;</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="s2">&quot;nodemon&quot;</span><span class="o">:</span> <span class="s2">&quot;^1.11.0&quot;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now you can create your <em>server.js </em>file<em> </em>and start building your API.</p>
+
+<h3>Our Server</h3>
+
+<p>Let’s start by requiring all your dependencies in <em>server.js.</em></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// server.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">express</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">MongoClient</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongodb&#39;</span><span class="p">).</span><span class="nx">MongoClient</span><span class="p">;</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">bodyParser</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;body-parser&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">app</span>            <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You’re going to use the MongoClient to interact with your database. Note that
+you also initialize your app as an instance of Express, your framework.</p>
+
+<p>The last thing you need to do to get your server up and running is to tell your
+app to start <em>listening </em>for HTTP requests.</p>
+
+<p>You can specify a port, and start the listening like so:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// server.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">port</span> <span class="o">=</span> <span class="mi">8000</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">port</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;We are live on &#39;</span> <span class="o">+</span> <span class="nx">port</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now if you run <em>npm run dev </em>(or <em>node server.js</em> if you didn’t install Nodemon)
+you should see ‘We are live on port 8000’ in the terminal.</p>
+
+<p>Your server is live. But it doesn’t do a whole lot. Or anything, really.</p>
+
+<p>Let’s fix that.</p>
+
+<h3>CRUDdy Routes</h3>
+
+<p>For this example, you want to build 4 routes; to CREATE a note, to READ your
+notes, to UPDATE a note, and to DELETE a note.</p>
+
+<p>This will give you a good idea of how to structure almost any basic route with
+Node.</p>
+
+<p>To test your API, though, you need to mimic a client side making requests. To do
+so, you’ll use a great app called <a href="https://www.getpostman.com/">Postman</a>. It
+allows you to make simple HTTP requests with custom bodies and parameters.</p>
+
+<p>Install Postman, and let’s start setting up your routes.</p>
+
+<h3>Super Organized</h3>
+
+<p>Most Node.js tutorials (and many real apps) put all their routes in one big
+<em>routes.js </em>file. This makes me a wee bit uncomfortable.In contrast, splitting
+up your files into separate folders leads to good readability, and makes big
+apps more manageable.</p>
+
+<p>You don’t have a big app, but let’s do this right. Make the following
+directories: an <em>app</em> folder with a routes folder inside it, with an <em>index.js
+</em>and a<em> note_routes.js </em>file inside it.</p>
+
+<p>In other words: root > app > routes > index.js and note_routes.js.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">mkdir</span> <span class="nx">app</span>
+</span><span class='line'><span class="nx">cd</span> <span class="nx">app</span>
+</span><span class='line'><span class="nx">mkdir</span> <span class="nx">routes</span>
+</span><span class='line'><span class="nx">cd</span> <span class="nx">routes</span>
+</span><span class='line'><span class="nx">touch</span> <span class="nx">index</span><span class="p">.</span><span class="nx">js</span>
+</span><span class='line'><span class="nx">touch</span> <span class="nx">note_routes</span><span class="p">.</span><span class="nx">js</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>These directories may seem like overkill for your simple small app, but it’s
+always good to start with best practices.</p>
+
+<h3>Your First Route</h3>
+
+<p>Let’s start with the C in CRUD- create. How would you create a note?</p>
+
+<p>Well, before you do that, you have to build a bit more infrastructure. In
+Express, routes are wrapped in a function, which takes the Express instance and
+a database as arguments.</p>
+
+<p>Like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// routes/note_routes.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You can then export this function through your<em> index.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// routes/index.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">noteRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./note_routes&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">noteRoutes</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">db</span><span class="p">);</span>
+</span><span class='line'>  <span class="c1">// Other route groups could go here, in the future</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then import it for use in <em>server.js:</em></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// server.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">express</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">MongoClient</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongodb&#39;</span><span class="p">).</span><span class="nx">MongoClient</span><span class="p">;</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">bodyParser</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;body-parser&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">app</span>            <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">port</span> <span class="o">=</span> <span class="mi">8000</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">port</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;We are live on &#39;</span> <span class="o">+</span> <span class="nx">port</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note that since you don’t have a database yet set up, you’re just passing in an
+empty object.</p>
+
+<p>Okay, <em>now</em> you can make your CREATE route.</p>
+
+<p>The syntax is simple:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// note_routes.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>When the app receives a <em>post </em>request to the ‘/notes’ path, it will execute the
+code inside the callback- passing in a request object (which contains the
+parameters or JSON of the request) and a response object (used to reply).</p>
+
+<p>You can test this by using Postman to send a POST request to
+localhost:8000/notes.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*pqIRP6BQSrVCCc6XVPZxPg.png" alt="" />
+You should get the ‘Hello’ back.</p>
+
+<p>Nice! You created your first real route.</p>
+
+<p>Next step is to add some parameters to your request and process them in your API
+and, finally, add in your database.</p>
+
+<h3>Request Parameters</h3>
+
+<p>In Postman, go to the Body tab and add some key-value pairs, after selecting the
+<em>x-www-form-urlencoded</em> radio button.</p>
+
+<p>This will add encoded form data to your request, which you’ll be able to process
+with your API.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*z2mIHYqGFYhSJv0x2_caqg.png" alt="" />
+You can try being more creative than me.</p>
+
+<p>Now in your <em>note_routes.js</em>, let’s just log out the body.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// note_routes.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/notes&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;Hello&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Try sending the Postman request and you’ll see… undefined.</p>
+
+<p>Unfortunately, Express can’t process URL encoded forms on its own. But you did
+install that body-parser package…</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// server.</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">express</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">MongoClient</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongodb&#39;</span><span class="p">).</span><span class="nx">MongoClient</span><span class="p">;</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">bodyParser</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;body-parser&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">app</span>            <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">port</span> <span class="o">=</span> <span class="mi">8000</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./app/routes&#39;</span><span class="p">)(</span><span class="nx">app</span><span class="p">,</span> <span class="p">{});</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">port</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;We are live on &#39;</span> <span class="o">+</span> <span class="nx">port</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now you should see the body as an object in the terminal.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;My Note Title&#39;</span><span class="p">,</span> <span class="nx">body</span><span class="o">:</span> <span class="s1">&#39;What a great note.&#39;</span> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Last step to your preliminary route: set up the database, and then add your data
+in.</p>
+
+<p>The easiest way to set up a Mongo database is through <a href="https://mlab.com/">mLab</a>:
+it’s free for the smallest size, and quite fast to setup.</p>
+
+<p>Once you create an account and a MongoDB deployment, add a user to the database
+with a username and password:</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*E5ws9QPkraXVwigcdW86nw.png" alt="" /></p>
+
+<p>then grab the URL here (the second one):</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*kJMlsvyB11W73cO-CioxxA.png" alt="" /></p>
+
+<p>And in a directory config in the root of your project, create a db.js file.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">mkdir</span> <span class="nx">config</span>
+</span><span class='line'><span class="nx">cd</span> <span class="nx">config</span>
+</span><span class='line'><span class="nx">touch</span> <span class="nx">db</span><span class="p">.</span><span class="nx">js</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Inside, add the URL:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">url</span> <span class="o">:</span> <span class="nx">YOUR</span> <span class="nx">URL</span> <span class="nx">HERE</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Don’t forget to add your username and password (the ones from the database user,
+not your mLab account) into the URL. (If you’re committing this project to
+Github, be sure to include a .gitignore file <a href="https://github.com/scottdomes/notable-node-api-tutorial/blob/master/.gitignore">like
+so</a>,
+so you don’t share your password with everyone.)</p>
+
+<p>Now in your <em>server.js</em>, you can use the MongoClient to connect to your DB, and
+use this to wrap your app setup:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// server.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">express</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">MongoClient</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongodb&#39;</span><span class="p">).</span><span class="nx">MongoClient</span><span class="p">;</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">bodyParser</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;body-parser&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">app</span>            <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">port</span> <span class="o">=</span> <span class="mi">8000</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">urlencoded</span><span class="p">({</span> <span class="nx">extended</span><span class="o">:</span> <span class="kc">true</span> <span class="p">}));</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That’s the last of your infrastructure setup! It’s all route-building from here.</p>
+
+<h3>Adding to your Database</h3>
+
+<p>MongoDB stores data in <em>collections</em>- which are exactly how they sound. In your
+case, you want to store your notes in a collection called — you guessed it —
+notes.</p>
+
+<p>Since you pass in your database as the <em>db </em>argument in your routes, you can
+then access it like so:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">&#39;notes&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Creating a note is as simple as calling <em>insert </em>on your collection:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">const</span> <span class="nx">note</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">text</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">body</span><span class="p">,</span> <span class="nx">title</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">title</span><span class="p">}</span>
+</span><span class='line'>  <span class="nx">db</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">&#39;notes&#39;</span><span class="p">).</span><span class="nx">insert</span><span class="p">(</span><span class="nx">note</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">results</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Once the insert is complete (or has failed for whatever reason), you want to
+either send back an error or send back the newly created note object. Here’s the
+full <em>note_routes.js:</em></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// note_routes.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/notes&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kr">const</span> <span class="nx">note</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">text</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">body</span><span class="p">,</span> <span class="nx">title</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">title</span> <span class="p">};</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">&#39;notes&#39;</span><span class="p">).</span><span class="nx">insert</span><span class="p">(</span><span class="nx">note</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Try it out! Send an x-www-form-urlencoded POST request with Postman, with a
+<em>title </em>and <em>body </em>set under the Body tab.</p>
+
+<p>The response should look like this:</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*YcGwoqOpRkQEo-N0W_-WEA.png" alt="" /></p>
+
+<p>If you log into mLab, you should also see the created note in the database.</p>
+
+<h3>Your READ Route</h3>
+
+<p>Now you can pick up the pace a bit.</p>
+
+<p>Say you wanted to get back the note you just created, by navigating to
+localhost:8000/notes/{the id}. In this case, that would be
+localhost:8000/notes/585182bd42ac5b07a9755ea3.</p>
+
+<p>(If you don’t have the ID for one of your notes, you can check on mLab or just
+create a new one).</p>
+
+<p>Here’s what this would look like in <em>note_routes.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// note_routes.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span>
+</span><span class='line'><span class="kd">function</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/notes&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kr">const</span> <span class="nx">note</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">text</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">body</span><span class="p">,</span> <span class="nx">title</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">title</span> <span class="p">};</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">&#39;notes&#39;</span><span class="p">).</span><span class="nx">insert</span><span class="p">(</span><span class="nx">note</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span> <span class="s1">&#39;error&#39;</span><span class="o">:</span> <span class="s1">&#39;An error has occurred&#39;</span> <span class="p">});</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Just like before, you’re going to call a method on your database collection of
+notes. Here, it’s the aptly named findOne.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// note_routes.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/notes/:id&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/notes&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kr">const</span> <span class="nx">note</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">text</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">body</span><span class="p">,</span> <span class="nx">title</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">title</span> <span class="p">};</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">&#39;notes&#39;</span><span class="p">).</span><span class="nx">insert</span><span class="p">(</span><span class="nx">note</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span> <span class="s1">&#39;error&#39;</span><span class="o">:</span> <span class="s1">&#39;An error has occurred&#39;</span> <span class="p">});</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You can grab the id from the URL parameters via <em>req.params.id</em>. However, if you
+try to just plop in the string into the &lt;> above, it won’t work.</p>
+
+<p>MongoDB requires not just an ID as a <em>string</em>, but as an ID <em>object</em> or, as they
+call it, an ObjectID.</p>
+
+<p>Don’t worry, it’s an easy fix. Here’s the full code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// note_routes.js</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/notes/:id&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">&#39;notes&#39;</span><span class="p">).</span><span class="nx">findOne</span><span class="p">(</span><span class="nx">details</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">item</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span><span class="s1">&#39;error&#39;</span><span class="o">:</span><span class="s1">&#39;An error has occurred&#39;</span><span class="p">});</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">item</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/notes&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kr">const</span> <span class="nx">note</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">text</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">body</span><span class="p">,</span> <span class="nx">title</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">title</span> <span class="p">};</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">&#39;notes&#39;</span><span class="p">).</span><span class="nx">insert</span><span class="p">(</span><span class="nx">note</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span> <span class="s1">&#39;error&#39;</span><span class="o">:</span> <span class="s1">&#39;An error has occurred&#39;</span> <span class="p">});</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Try it out with one of your note ID’s, and it should look like this:</p>
+
+<h3>Your DELETE Route</h3>
+
+<p>Deleting an object is actually pretty much the same as finding an object. You
+just use the <em>remove</em> function instead of the <em>findOne</em>. Here’s the full code.
+I’ve highlighted what’s different from your GET:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// note_routes.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// ...</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">app</span><span class="p">.</span>
+</span><span class='line'><span class="p">(</span><span class="s1">&#39;/notes/:id&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kr">const</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+</span><span class='line'>    <span class="kr">const</span> <span class="nx">details</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;_id&#39;</span><span class="o">:</span> <span class="k">new</span> <span class="nx">ObjectID</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">};</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">&#39;notes&#39;</span><span class="p">).</span>
+</span><span class='line'><span class="p">(</span><span class="nx">details</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">item</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span><span class="s1">&#39;error&#39;</span><span class="o">:</span><span class="s1">&#39;An error has occurred&#39;</span><span class="p">});</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// ...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3><strong>Your UPDATE Route</strong></h3>
+
+<p>Last one! The PUT is basically a hybrid between READ and CREATE. You find the
+object, then update it accordingly. If you deleted your only note, time to make
+another one!</p>
+
+<p>The code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// note_routes.js</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// ...</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">app</span><span class="p">.</span>
+</span><span class='line'><span class="p">(</span><span class="s1">&#39;/notes/:id&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span><span class="s1">&#39;error&#39;</span><span class="o">:</span><span class="s1">&#39;An error has occurred&#39;</span><span class="p">});</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">note</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// ...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now you can update any of your notes, like so:</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/1*LZ1DzuxzAJAyNYjO4sZcmg.png" alt="" /></p>
+
+<p>Note the imperfection with this code- if you fail to supply a body or title, the
+PUT request will nullify those fields on the note in the database.</p>
+
+<p>You could easily add some conditional logic to update the fields only if they’re
+present in the request- I left that out just to keep it simple.</p>
+
+<h3>API Complete</h3>
+
+<p>That’s it! You have a working Node API with each of the four major CRUD
+operations.</p>
+
+<p>The goal of this tutorial was to give you a degree of familiarity with Express,
+Node, and MongoDB — you can use your simple app as a launching pad for more
+complex projects.</p>
+
+<p>In the future I’ll be writing tutorials to create more simple API’s in different
+languages and frameworks. Hit the follow button if you’re interested!</p>
+
+<p>If this tutorial was any help to you, please hit the green heart below- it means
+a lot. Feel free to also leave me a comment with any feedback or questions.</p>
+
+<p>Thanks for reading!</p>
 
       <footer class="entry-meta">
-        <span class="entry-tags"></span>
+        <span class="entry-tags"><a href="/categories/#nodejs" title="Pages tagged nodejs" class="tag">nodejs</a><a href="/categories/#javascript" title="Pages tagged javascript" class="tag">javascript</a><a href="/categories/#web development" title="Pages tagged web development" class="tag">web development</a><a href="/categories/#programming" title="Pages tagged programming" class="tag">programming</a><a href="/categories/#api" title="Pages tagged api" class="tag">api</a></span>
         <span><a href="/blog/build-a-node-dot-js-api-in-under-30-minutes/" rel="bookmark" title="Build a Node.js API in Under 30 Minutes">Build a Node.js API in Under 30 Minutes</a> was published on <span class="entry-date date published updated"><time datetime="2017-08-11T16:50:51-07:00">August 11, 2017</time></span></span>
         
         <span class="author vcard"><span class="fn"><a href="" title="About Scott Domes">Scott Domes</a></span></span>
