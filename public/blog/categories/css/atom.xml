@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Css | Scott Domes | Web Developer]]></title>
   <link href="http://scottdomes.com/blog/categories/css/atom.xml" rel="self"/>
   <link href="http://scottdomes.com/"/>
-  <updated>2017-08-16T17:48:24-07:00</updated>
+  <updated>2017-08-16T17:48:49-07:00</updated>
   <id>http://scottdomes.com/</id>
   <author>
     <name><![CDATA[Scott Domes]]></name>
@@ -28,6 +28,9 @@ be challenging.</p>
 
 <p>So let’s take an animated look at how Flexbox works, so we can use it to build
 better layouts.</p>
+
+<!--more-->
+
 
 <p>Flexbox’s underlying principle is to make layouts flexible and intuitive.</p>
 

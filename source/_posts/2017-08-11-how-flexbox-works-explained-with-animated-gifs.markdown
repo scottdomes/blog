@@ -17,6 +17,8 @@ be challenging.
 So let’s take an animated look at how Flexbox works, so we can use it to build
 better layouts.
 
+<!--more-->
+
 Flexbox’s underlying principle is to make layouts flexible and intuitive.
 
 To accomplish this, it lets containers decide for themselves how to evenly
