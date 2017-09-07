@@ -118,7 +118,453 @@
       </div><!-- /.header-title-wrap -->
     </header>
     <div class="entry-content">
-      
+      <h1>Build your first progressive web app with React</h1>
+
+<p>Progressive Web Apps are the much-hyped future of the web. Let’s build one!</p>
+
+<p>Google has been pushing PWA’s hard as the solution to many of the problems of
+the modern web — particularly issues for mobile users.</p>
+
+<p>PWA are essentially fast, performance-focused web applications that are
+streamlined for mobile. They also can be saved to your smartphone’s home screen
+and, from there, look and feel like a native app (including features like
+offline access and push notifications).</p>
+
+<p>Big players like
+<a href="https://blog.twitter.com/2017/how-we-built-twitter-lite">Twitter</a> and
+<a href="https://flipboard.com/">Flipboard</a> have recently launched PWA’s, which you can
+try out by going to either <a href="http://flipboard.com/">http://flipboard.com</a> or
+<a href="https://lite.twitter.com/">https://lite.twitter.com/</a> on your phone.</p>
+
+<p>In this tutorial, you’ll build a simple PWA using React — giving you a
+boilerplate from which to construct more complex applications.</p>
+
+<h3>Getting Set Up</h3>
+
+<p>To start, let’s generate a basic React application with
+<a href="https://github.com/facebookincubator/create-react-app">create-react-app</a>.</p>
+
+<p>To do so, switch to the directory in which you want to save your app, and run
+the following:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>npm install -g create-react-app
+</span><span class='line'>create-react-app pwa-experiment</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then, let’s install React Router:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>cd pwa-experiment
+</span><span class='line'>npm install --save react-router@3.0.5</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Finally, copy this gist into your App.js. This will give us a simple layout with
+navigation:</p>
+
+<div><script src='https://gist.github.com/32246c815fa522580b7bfd8553eb66c9.js'></script>
+<noscript><pre><code>import React, { Component } from &#39;react&#39;;
+import { Router, browserHistory, Route, Link } from &#39;react-router&#39;;
+import logo from &#39;./logo.svg&#39;;
+import &#39;./App.css&#39;;
+
+const Page = ({ title }) =&gt; (
+    &lt;div className=&quot;App&quot;&gt;
+      &lt;div className=&quot;App-header&quot;&gt;
+        &lt;img src={logo} className=&quot;App-logo&quot; alt=&quot;logo&quot; /&gt;
+        &lt;h2&gt;{title}&lt;/h2&gt;
+      &lt;/div&gt;
+      &lt;p className=&quot;App-intro&quot;&gt;
+        This is the {title} page.
+      &lt;/p&gt;
+      &lt;p&gt;
+        &lt;Link to=&quot;/&quot;&gt;Home&lt;/Link&gt;
+      &lt;/p&gt;
+      &lt;p&gt;
+        &lt;Link to=&quot;/about&quot;&gt;About&lt;/Link&gt;
+      &lt;/p&gt;
+      &lt;p&gt;
+        &lt;Link to=&quot;/settings&quot;&gt;Settings&lt;/Link&gt;
+      &lt;/p&gt;
+    &lt;/div&gt;
+);
+
+const Home = (props) =&gt; (
+  &lt;Page title=&quot;Home&quot;/&gt;
+);
+
+const About = (props) =&gt; (
+  &lt;Page title=&quot;About&quot;/&gt;
+);
+
+const Settings = (props) =&gt; (
+  &lt;Page title=&quot;Settings&quot;/&gt;
+);
+
+class App extends Component {
+  render() {
+    return (
+      &lt;Router history={browserHistory}&gt;
+        &lt;Route path=&quot;/&quot; component={Home}/&gt;
+        &lt;Route path=&quot;/about&quot; component={About}/&gt;
+        &lt;Route path=&quot;/settings&quot; component={Settings}/&gt;
+      &lt;/Router&gt;
+    );
+  }
+}
+
+export default App;
+</code></pre></noscript></div>
+
+
+<p>Run <em>npm start</em> to test our your app. Not much to look at, but it’ll serve our
+purposes just fine. Let’s get started converting this into a PWA.</p>
+
+<h3>Step 1: Install Lighthouse</h3>
+
+<p>Lighthouse is a free tool from Google that evaluates your app based on their PWA
+checklist.</p>
+
+<p>Let’s <a href="https://chrome.google.com/webstore/detail/lighthouse/blipmdconlkpinefehnmjammfjpmpbjk">install it to
+Chrome</a>,
+and then evaluate our app. You can start a Lighthouse audit by clicking the
+Lightouse icon in the top right corner of Chrome, and then clicking Generate
+Report.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/2000/1*V6PeCwLINQCTumMaKGlIpg.png" alt="" /></p>
+
+<p>Ouch.</p>
+
+<p>So far, our app is fast (since we have very little content) but fails in a
+number of key areas.</p>
+
+<p>You can view the checklist that Lighthouse uses <a href="https://developers.google.com/web/progressive-web-apps/checklist">here</a>.</p>
+
+<p>Let’s work through the problems, one by one.</p>
+
+<h3>Step 2: Set Up A Service Worker</h3>
+
+<p>A <a href="https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API">service
+worker</a> is
+a bit of JavaScript that sits between our application and the network. We’re
+going to use it to intercept network requests and serve up cached files — this
+will allow our app to work offline.</p>
+
+<p>To get started with a service worker, we need to do three things:</p>
+
+<ul>
+<li>Create a service-worker.js file in our public folder</li>
+<li>Register the worker via our index.html</li>
+<li>Set up caching</li>
+</ul>
+
+
+<p>Let’s get to it.</p>
+
+<p>First step is pretty self-explanatory. In pwa-experiment/public, create a blank
+JavaScript file named service-worker.js.</p>
+
+<p>Second step is a bit more involved. We want to check if the browser supports
+service workers, and then register one by loading in service-worker.js.</p>
+
+<p>To do so, let’s add a script tag to our public/index.html.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="cp">&lt;!doctype html&gt;</span>
+</span><span class='line'><span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">&quot;en&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;head&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content=</span><span class="s">&quot;width=device-width, initial-scale=1&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;shortcut icon&quot;</span> <span class="na">href=</span><span class="s">&quot;%PUBLIC_URL%/favicon.ico&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;title&gt;</span>React App<span class="nt">&lt;/title&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/head&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;body&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;root&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/body&gt;</span>
+</span><span class='line'><span class="nt">&lt;/html&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The code is straightforward- if the navigator supports it, we wait for the page
+to load and then register our worker by loading in the service-worker.js file.</p>
+
+<p>Last step: set up caching!</p>
+
+<p>We’re going to copy Addy Osmani’s service worker configuration from
+<a href="https://medium.com/@addyosmani/progressive-web-apps-with-react-js-part-3-offline-support-and-network-resilience-c84db889162c">here</a>,
+but also disable the cache for development purposes (and take the precautionary
+step of deleting all caches when the service worker initializes).</p>
+
+<p>In public/service-worker.js:</p>
+
+<div><script src='https://gist.github.com/ff78cc64a9216e6d29d28d519c5c4e8d.js'></script>
+<noscript><pre><code>// Set this to true for production
+var doCache = false;
+
+// Name our cache
+var CACHE_NAME = &#39;my-pwa-cache-v1&#39;;
+
+// Delete old caches that are not our current one!
+self.addEventListener(&quot;activate&quot;, event =&gt; {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys()
+      .then(keyList =&gt;
+        Promise.all(keyList.map(key =&gt; {
+          if (!cacheWhitelist.includes(key)) {
+            console.log(&#39;Deleting cache: &#39; + key)
+            return caches.delete(key);
+          }
+        }))
+      )
+  );
+});
+
+// The first time the user starts up the PWA, &#39;install&#39; is triggered.
+self.addEventListener(&#39;install&#39;, function(event) {
+  if (doCache) {
+    event.waitUntil(
+      caches.open(CACHE_NAME)
+        .then(function(cache) {
+          // Get the assets manifest so we can see what our js file is named
+          // This is because webpack hashes it
+          fetch(&quot;asset-manifest.json&quot;)
+            .then(response =&gt; {
+              response.json()
+            })
+            .then(assets =&gt; {
+              // Open a cache and cache our files
+              // We want to cache the page and the main.js generated by webpack
+              // We could also cache any static assets like CSS or images
+              const urlsToCache = [
+                &quot;/&quot;,
+                assets[&quot;main.js&quot;]
+              ]
+              cache.addAll(urlsToCache)
+              console.log(&#39;cached&#39;);
+            })
+        })
+    );
+  }
+});
+
+// When the webpage goes to fetch files, we intercept that request and serve up the matching files
+// if we have them
+self.addEventListener(&#39;fetch&#39;, function(event) {
+    if (doCache) {
+      event.respondWith(
+          caches.match(event.request).then(function(response) {
+              return response || fetch(event.request);
+          })
+      );
+    }
+});</code></pre></noscript></div>
+
+
+<p>Restart your app with <em>npm run start</em> and you should see the following in the
+console:</p>
+
+<p>For a deeper discussion into service workers and scope, see the below:</p>
+
+<p>Let’s close DevTools and run the Lighthouse audit again:</p>
+
+<p>We’re making progress! We now have a registered service worker. Since we
+disabled the caching, we haven’t ticked the second box yet, but once we enable
+caches (when we go live) it will work!</p>
+
+<h3>Step 3: Add Progressive Enhancement</h3>
+
+<p>Progressive enhancement basically means your site will work without any
+JavaScript loading.</p>
+
+<p>Right now, our index.html just renders an empty div (#root), which our React app
+then hooks into.</p>
+
+<p>We want to instead display some basic HTML and CSS before the React app
+initializes.</p>
+
+<p>The easiest way to do so is to move some of our basic HTML structure <em>within
+</em>that div#root. This HTML will be overwritten as soon as ReactDOM renders our
+App component, but will give the user something other than a blank page to stare
+at as the bundle.js loads.</p>
+
+<p>Here’s our new index.html. Note both the styles in the head, and the HTML within
+div#root.</p>
+
+<p>(As an aside, we can now delete duplicate styles in App.css and index.css — just
+to be clean.)</p>
+
+<p>Does Lighthouse approve?</p>
+
+<p>Yep!</p>
+
+<h3>Step 4: Add To Home Screen Capability</h3>
+
+<p>We can skip the requirements about https — that will be taken care of once we
+deploy.</p>
+
+<p>Now, onto the feature that makes PWA’s particularly exciting: the ability for
+the user to save them to their home screen, and then open them like an app.</p>
+
+<p>To do, we need to add a manifest.json file to our public directory (copy the
+uncommented version below this one).</p>
+
+<pre><code>{
+  // Short name is what appears on home screen
+  "short_name": "My First PWA",
+  // Name is what appears on splash screen
+  "name": "My First Progressive Web App",
+  // What appears on splash screen &amp; home screen
+  "icons": [
+    {
+      "src":"icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  // So your site can tell it was opened from home screen
+  "start_url": "/?utm_source=homescreen",
+  // Match our app header background
+  "background_color": "#222",
+  // What the URL bar will look like
+  "theme_color": "#222",
+  // How the app will appear when it launches (see link below)
+  "display": "standalone"
+  // Read more: 
+}
+</code></pre>
+
+<p>Here’s the file without comments:</p>
+
+<p>Here’s the icon if you need one (courtesy of my company,
+<a href="http://musefind.com/">MuseFind</a>), or create your own (must be 192 by 192
+pixels):</p>
+
+<p>Add the icon.png and manifest.json into your public folder, and then add the
+following lines to your index.html:</p>
+
+<pre><code>  &lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+    &lt;link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico"&gt;
+    &lt;!-- Add manifest --&gt;
+    &lt;!-- Tell the browser it's a PWA --&gt;
+    &lt;!-- Tell iOS it's a PWA --&gt;
+    &lt;!-- Make sure theme-color is defined --&gt;
+    &lt;title&gt;React App&lt;/title&gt;
+  &lt;/head&gt;
+</code></pre>
+
+<p>Alright, <em>now</em> how are we doing?</p>
+
+<p>All we’re missing is caching and https. Let’s push this live!</p>
+
+<h3>Step 5: Deploy Via Firebase</h3>
+
+<p>First, let’s turn on caching. Change <em>doCache</em> to <strong>true</strong> in your
+service-worker.js.</p>
+
+<p>Then, in the <a href="https://console.firebase.google.com/">Firebase console</a>, create a
+new project called pwa-experiment.</p>
+
+<p>Back in your project folder, run the following:</p>
+
+<pre><code>npm install -g firebase-tools
+firebase login
+firebase init
+</code></pre>
+
+<p>After you complete the login and start the initiation, answer the following
+questions:</p>
+
+<p>When it asks <strong>What Firebase CLI features do you want to setup for this
+directory?</strong>, use the spacebar to deselect all but Hosting.</p>
+
+<p>Hit enter, then select pwa-experiment as the project.</p>
+
+<p>When it asks <strong>What do you want to use as your public directory?, </strong>type <em>build</em>
+and then hit enter.</p>
+
+<p>For the single page app question, say no.</p>
+
+<p>That should complete. Then, you can run the following:</p>
+
+<pre><code>npm run build &amp;&amp; firebase deploy
+</code></pre>
+
+<p>This tells create-react-app to build our project into the build/ folder, which
+Firebase then deploys.</p>
+
+<p>Firebase will give you back a URL. Let’s open that in Chrome, and then run our
+Lighthouse audit one last time.</p>
+
+<p>This time, we’ll be using HTTPS instead of HTTP, and take advantage of caching.</p>
+
+<p>We did it!</p>
+
+<p>As a last test, open it up on your phone and try saving it to your home screen.
+Once opened from the home screen, it should feel like a native app.</p>
+
+<h3>Where To Go From Here</h3>
+
+<p>The essence of a PWA is speed. In this tutorial, we skipped a lot of the
+performance enhancement, since our app was so barebones.</p>
+
+<p>As your app grows, however, our main.js file is going to grow and grow, and
+Lighthouse will be less and less pleased with us.</p>
+
+<p>Stay tuned (AKA follow me: <a href="https://medium.com/@scottdomes">Scott Domes</a> or my
+<a href="http://twitter.com/scottdomes">Twitter</a>) for an in-depth article on optimizing
+performance with React and React Router that will work for both PWA and
+old-fashioned web apps.</p>
+
+<p>For now, we have a working skeleton of PWA to build on — we’re ready for the
+future of web apps.</p>
+
+<h3>Done!</h3>
+
+<p>If this article has been helpful, recommend it by hitting the green heart or
+(even better) share it.</p>
+
+<p>Want to stay up to date/learn best practices for the future of web development?
+Say hello to Progressive Web App Newsletter — subscribe below.</p>
+
+<p>Here’s the final repo:</p>
+
+<ul>
+<li><a href="https://engineering.musefind.com/tagged/web-development?source=post">Web
+Development</a></li>
+<li><a href="https://engineering.musefind.com/tagged/javascript?source=post">JavaScript</a></li>
+<li><a href="https://engineering.musefind.com/tagged/progressive-web-app?source=post">Progressive Web
+App</a></li>
+<li><a href="https://engineering.musefind.com/tagged/react?source=post">React</a></li>
+<li><a href="https://engineering.musefind.com/tagged/es6?source=post">ES6</a></li>
+</ul>
+
+
+<p>Clapping shows how much you appreciated Scott Domes’s story.</p>
+
+<h3><a href="https://engineering.musefind.com/@scottdomes">Scott Domes</a></h3>
+
+<p>Lead Developer @ MuseFind. Curator of
+<a href="http://pwa-newsletter.com/">http://pwa-newsletter.com/</a>.</p>
+
+<h3><a href="https://engineering.musefind.com/?source=footer_card">Code == Life</a></h3>
+
+<p>We here at MuseFind would like share our take on the world of programming.</p>
 
       <!-- Begin MailChimp Signup Form -->
       <link href="//cdn-images.mailchimp.com/embedcode/horizontal-slim-10_7.css" rel="stylesheet" type="text/css">
