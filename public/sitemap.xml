@@ -1,30 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
-<loc>http://scottdomes.com/blog/make-your-rails-app-real-time-in-under-ten-minutes/</loc>
-<lastmod>2017-08-11T16:54:22-07:00</lastmod>
-</url>
-<url>
-<loc>http://scottdomes.com/blog/five-es6-features-to-make-your-life-easier/</loc>
-<lastmod>2017-08-11T16:54:13-07:00</lastmod>
-</url>
-<url>
-<loc>http://scottdomes.com/blog/build-your-first-progressive-web-app-with-react/</loc>
-<lastmod>2017-08-11T16:54:01-07:00</lastmod>
-</url>
-<url>
-<loc>http://scottdomes.com/blog/react-lifecycle-methods-how-and-when-to-use-them/</loc>
-<lastmod>2017-08-11T16:53:51-07:00</lastmod>
-</url>
-<url>
-<loc>http://scottdomes.com/blog/we-compared-the-3-best-image-analysis-apis-heres-what-we-learned/</loc>
-<lastmod>2017-08-11T16:53:44-07:00</lastmod>
-</url>
-<url>
-<loc>http://scottdomes.com/blog/even-more-about-how-flexbox-works-explained-in-animated-gifs/</loc>
-<lastmod>2017-08-11T16:53:33-07:00</lastmod>
-</url>
-<url>
 <loc>http://scottdomes.com/blog/how-flexbox-works-explained-with-animated-gifs/</loc>
 <lastmod>2017-08-11T16:52:52-07:00</lastmod>
 </url>
@@ -113,8 +89,5 @@
 </url>
 <url>
 <loc>http://scottdomes.com/blog/categories/web-design/</loc>
-</url>
-<url>
-<loc>http://scottdomes.com/posts/2/</loc>
 </url>
 </urlset>
