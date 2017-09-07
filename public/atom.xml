@@ -4,7 +4,7 @@
   <title><![CDATA[Scott Domes | Web Developer]]></title>
   <link href="http://scottdomes.com/atom.xml" rel="self"/>
   <link href="http://scottdomes.com/"/>
-  <updated>2017-08-25T13:36:23-07:00</updated>
+  <updated>2017-09-07T08:11:02-07:00</updated>
   <id>http://scottdomes.com/</id>
   <author>
     <name><![CDATA[Scott Domes]]></name>
@@ -12,60 +12,6 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
-  
-  <entry>
-    <title type="html"><![CDATA[Make Your Rails App Real-time—in Under Ten Minutes]]></title>
-    <link href="http://scottdomes.com/blog/make-your-rails-app-real-time-in-under-ten-minutes/"/>
-    <updated>2017-08-11T16:54:22-07:00</updated>
-    <id>http://scottdomes.com/blog/make-your-rails-app-real-time-in-under-ten-minutes</id>
-    <content type="html"><![CDATA[
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Five ES6 Features to Make Your Life Easier]]></title>
-    <link href="http://scottdomes.com/blog/five-es6-features-to-make-your-life-easier/"/>
-    <updated>2017-08-11T16:54:13-07:00</updated>
-    <id>http://scottdomes.com/blog/five-es6-features-to-make-your-life-easier</id>
-    <content type="html"><![CDATA[
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Build Your First Progressive Web App With React]]></title>
-    <link href="http://scottdomes.com/blog/build-your-first-progressive-web-app-with-react/"/>
-    <updated>2017-08-11T16:54:01-07:00</updated>
-    <id>http://scottdomes.com/blog/build-your-first-progressive-web-app-with-react</id>
-    <content type="html"><![CDATA[
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[React Lifecycle Methods- How and When to Use Them]]></title>
-    <link href="http://scottdomes.com/blog/react-lifecycle-methods-how-and-when-to-use-them/"/>
-    <updated>2017-08-11T16:53:51-07:00</updated>
-    <id>http://scottdomes.com/blog/react-lifecycle-methods-how-and-when-to-use-them</id>
-    <content type="html"><![CDATA[
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[We Compared the 3 Best Image Analysis API’s — here’s What We Learned]]></title>
-    <link href="http://scottdomes.com/blog/we-compared-the-3-best-image-analysis-apis-heres-what-we-learned/"/>
-    <updated>2017-08-11T16:53:44-07:00</updated>
-    <id>http://scottdomes.com/blog/we-compared-the-3-best-image-analysis-apis-heres-what-we-learned</id>
-    <content type="html"><![CDATA[
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Even More About How Flexbox Works — explained in Animated Gifs]]></title>
-    <link href="http://scottdomes.com/blog/even-more-about-how-flexbox-works-explained-in-animated-gifs/"/>
-    <updated>2017-08-11T16:53:33-07:00</updated>
-    <id>http://scottdomes.com/blog/even-more-about-how-flexbox-works-explained-in-animated-gifs</id>
-    <content type="html"><![CDATA[
-]]></content>
-  </entry>
   
   <entry>
     <title type="html"><![CDATA[How Flexbox Works — Explained With Animated Gifs]]></title>
